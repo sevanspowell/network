@@ -35,16 +35,16 @@ with (import ./installer.nix { inherit pkgs config; });
 
 # ✓ Start with LUKS simple
 # ✓ Add UEFI
-# systemd boot
+# ✓ systemd boot
 # Add ZFS
 makeInstallerTest "basic-eyd" {
   createPartitions = ''
     machine.succeed(
         "flock /dev/vda parted --script /dev/vda -- mklabel gpt"
-        + " mkpart ESP fat32 1M 50MB"  # /boot
+        + " mkpart ESP fat32 1M 50MiB"  # /boot
         + " set 1 boot on"
-        + " mkpart primary linux-swap 50M 1024M"
-        + " mkpart primary ext2 1024M -1MiB",  # LUKS
+        + " mkpart primary linux-swap 50MiB 1024MiB"
+        + " mkpart primary ext2 1024MiB -1MiB",  # /
         "udevadm settle",
         "mkswap /dev/vda2 -L swap",
         "swapon -L swap",
@@ -58,8 +58,7 @@ makeInstallerTest "basic-eyd" {
         "mount LABEL=BOOT /mnt/boot",
     )
   '';
-  bootLoader = "grub";
-  grubUseEfi = true;
+  bootLoader = "systemd-boot";
   extraConfig = ''
     boot.kernelParams = lib.mkAfter [ "console=tty0" ];
   '';
