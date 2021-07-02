@@ -34,15 +34,17 @@ in
 with (import ./installer.nix { inherit pkgs config; });
 
 # ✓ Start with LUKS simple
-# Add UEFI/systemd boot
+# ✓ Add UEFI
+# systemd boot
 # Add ZFS
 makeInstallerTest "basic-eyd" {
   createPartitions = ''
     machine.succeed(
-        "flock /dev/vda parted --script /dev/vda -- mklabel msdos"
-        + " mkpart primary ext2 1M 50MB"  # /boot
+        "flock /dev/vda parted --script /dev/vda -- mklabel gpt"
+        + " mkpart ESP fat32 1M 50MB"  # /boot
+        + " set 1 boot on"
         + " mkpart primary linux-swap 50M 1024M"
-        + " mkpart primary 1024M -1s",  # LUKS
+        + " mkpart primary ext2 1024M -1MiB",  # LUKS
         "udevadm settle",
         "mkswap /dev/vda2 -L swap",
         "swapon -L swap",
@@ -51,11 +53,13 @@ makeInstallerTest "basic-eyd" {
         "echo -n supersecret | cryptsetup luksOpen --key-file - /dev/vda3 cryptroot",
         "mkfs.ext3 -L nixos /dev/mapper/cryptroot",
         "mount LABEL=nixos /mnt",
-        "mkfs.ext3 -L boot /dev/vda1",
+        "mkfs.vfat -n BOOT /dev/vda1",
         "mkdir -p /mnt/boot",
-        "mount LABEL=boot /mnt/boot",
+        "mount LABEL=BOOT /mnt/boot",
     )
   '';
+  bootLoader = "grub";
+  grubUseEfi = true;
   extraConfig = ''
     boot.kernelParams = lib.mkAfter [ "console=tty0" ];
   '';
