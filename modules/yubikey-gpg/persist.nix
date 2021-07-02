@@ -21,9 +21,9 @@ in
       # If the home-manager service runs first, it will create the
       # .gnupg directory, but do so with "permissive" permissions.
       # GnuPG complains when the permissions on the ".gnupg" directory
-      # are too loose. So we run home-manager after tmpfiles has had
-      # the chance to create the directory with more restrictive
-      # permissions.
+      # are too loose. So we run home-manager after systemd.tmpfiles
+      # has had the chance to create the directory with more
+      # restrictive permissions.
       #
       # If this dependency causes problems in future we might want to
       # look at home-manager's user tmpfiles implementation.
