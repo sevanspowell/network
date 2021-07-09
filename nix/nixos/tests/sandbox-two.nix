@@ -36,7 +36,8 @@ with (import ./installer.nix { inherit pkgs config; });
 # ✓ Start with LUKS simple
 # ✓ Add UEFI
 # ✓ systemd boot
-# Add ZFS
+# ✓ Add ZFS with systemd boot, no LUKS
+# Add ZFS with Grub UEFI boot
 makeInstallerTest "basic-eyd" {
   createPartitions = ''
     machine.succeed(
@@ -48,11 +49,14 @@ makeInstallerTest "basic-eyd" {
         "udevadm settle",
         "mkswap /dev/vda2 -L swap",
         "swapon -L swap",
-        "modprobe dm_mod dm_crypt",
-        "echo -n supersecret | cryptsetup luksFormat -q /dev/vda3 -",
-        "echo -n supersecret | cryptsetup luksOpen --key-file - /dev/vda3 cryptroot",
-        "mkfs.ext3 -L nixos /dev/mapper/cryptroot",
-        "mount LABEL=nixos /mnt",
+        # MAIN
+        # "mkfs.ext3 -L nixos /dev/vda3",
+        # "mount LABEL=nixos /mnt",
+        "zpool create rpool /dev/vda3",
+        "zfs create -o mountpoint=legacy rpool/root",
+        "mount -t zfs rpool/root /mnt",
+        "udevadm settle",
+        # END MAIN
         "mkfs.vfat -n BOOT /dev/vda1",
         "mkdir -p /mnt/boot",
         "mount LABEL=BOOT /mnt/boot",
@@ -61,13 +65,25 @@ makeInstallerTest "basic-eyd" {
   bootLoader = "systemd-boot";
   extraConfig = ''
     boot.kernelParams = lib.mkAfter [ "console=tty0" ];
+
+    # ZFS
+    boot.supportedFilesystems = [ "zfs" ];
+
+    # Using by-uuid overrides the default of by-id, and is unique
+    # to the qemu disks, as they don't produce by-id paths for
+    # some reason.
+    boot.zfs.devNodes = "/dev/disk/by-uuid/";
+    networking.hostId = "00000000";
   '';
-  enableOCR = true;
-  preBootCommands = ''
-    machine.start()
-    machine.wait_for_text("Passphrase for")
-    machine.send_chars("supersecret\n")
-  '';
+  # enableOCR = true;
+  # preBootCommands = ''
+  #   # machine.start()
+  #   # machine.wait_for_text("Passphrase for")
+  #   # machine.send_chars("supersecret\n")
+  # '';
+  extraInstallerConfig = {
+    boot.supportedFilesystems = [ "zfs" ];
+  };
 }
 
 # makeInstallerTest "zfs-root" {
