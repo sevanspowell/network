@@ -37,22 +37,28 @@ with (import ./installer.nix { inherit pkgs config; });
 # ✓ Add UEFI
 # ✓ systemd boot
 # ✓ Add ZFS with systemd boot, no LUKS
-# Add ZFS with Grub UEFI boot
+# ✓ Merge special swap partition (one partition)
+# Setup appropriate zfs partitions
+# Make a basic test (touched file in persist stays, otherwise gone on reboot)
+# Make ZFS partitions configurable
 makeInstallerTest "basic-eyd" {
   createPartitions = ''
     machine.succeed(
         "flock /dev/vda parted --script /dev/vda -- mklabel gpt"
         + " mkpart ESP fat32 1M 50MiB"  # /boot
         + " set 1 boot on"
-        + " mkpart primary linux-swap 50MiB 1024MiB"
-        + " mkpart primary ext2 1024MiB -1MiB",  # /
+        + " mkpart primary 50MiB -1MiB",  # /
         "udevadm settle",
-        "mkswap /dev/vda2 -L swap",
+        "pvcreate /dev/vda2",
+        "vgcreate nixos-vg /dev/vda2",
+        "lvcreate -L 1G -n swap nixos-vg",
+        "mkswap -L swap /dev/nixos-vg/swap",
         "swapon -L swap",
         # MAIN
         # "mkfs.ext3 -L nixos /dev/vda3",
         # "mount LABEL=nixos /mnt",
-        "zpool create rpool /dev/vda3",
+        "lvcreate -l 100%FREE -n root nixos-vg",
+        "zpool create -f rpool /dev/nixos-vg/root",
         "zfs create -o mountpoint=legacy rpool/root",
         "mount -t zfs rpool/root /mnt",
         "udevadm settle",
@@ -62,7 +68,8 @@ makeInstallerTest "basic-eyd" {
         "mount LABEL=BOOT /mnt/boot",
     )
   '';
-  bootLoader = "systemd-boot";
+  bootLoader = "grub";
+  grubUseEfi = true;
   extraConfig = ''
     boot.kernelParams = lib.mkAfter [ "console=tty0" ];
 
