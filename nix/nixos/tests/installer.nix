@@ -127,6 +127,7 @@ let
               }",
               "/mnt/etc/nixos/configuration.nix",
           )
+          machine.succeed("cat /mnt/etc/nixos/configuration.nix >&2")
 
       with subtest("Perform the installation"):
           machine.succeed("nixos-install < /dev/null >&2")
@@ -136,6 +137,7 @@ let
 
       with subtest("Shutdown system after installation"):
           machine.succeed("umount /mnt/boot || true")
+          machine.succeed("umount /mnt/nix || true")
           machine.succeed("umount /mnt")
           machine.succeed("sync")
           machine.shutdown()
