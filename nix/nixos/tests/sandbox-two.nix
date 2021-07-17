@@ -3,17 +3,17 @@
 with pkgs;
 
 let
-  user = "alice"; 
+  user = "alice";
 
   DISK_PATH = "/dev/vda";
-  DISK_PART_LUKS = "${DISK_PATH}1";
-  DISK_PART_BOOT = "${DISK_PATH}2";
-  LUKS_PV_NAME = "nixos-enc";
-  LUKS_PV_PATH = "/dev/mapper/${LUKS_PV_NAME}";
-  LUKS_VG_NAME = "nixos-vg";
-  LUKS_VG_PATH = "/dev/${LUKS_VG_NAME}";
-  DISK_PART_SWAP = "${LUKS_VG_PATH}/swap";
-  DISK_PART_ROOT= "${LUKS_VG_PATH}/root";
+  DISK_PART_BOOT = "${DISK_PATH}1";
+  DISK_PART_VOL = "${DISK_PATH}2";
+  VOL_PV_NAME = "nixos-enc";
+  VOL_PV_PATH = "/dev/mapper/${VOL_PV_NAME}";
+  VOL_VG_NAME = "nixos-vg";
+  VOL_VG_PATH = "/dev/${VOL_VG_NAME}";
+  DISK_PART_SWAP = "${VOL_VG_PATH}/swap";
+  DISK_PART_ROOT= "${VOL_VG_PATH}/root";
   SWAP_AMT = "1G";
 
   ZFS_POOL = "rpool";
@@ -44,26 +44,35 @@ with (import ./installer.nix { inherit pkgs config; });
 makeInstallerTest "basic-eyd" {
   createPartitions = ''
     machine.succeed(
-        "flock /dev/vda parted --script /dev/vda -- mklabel gpt"
+        "flock ${DISK_PATH} parted --script ${DISK_PATH} -- mklabel gpt"
         + " mkpart ESP fat32 1M 50MiB"  # /boot
         + " set 1 boot on"
         + " mkpart primary 50MiB -1MiB",  # /
         "udevadm settle",
-        "pvcreate /dev/vda2",
-        "vgcreate nixos-vg /dev/vda2",
-        "lvcreate -L 1G -n swap nixos-vg",
-        "mkswap -L swap /dev/nixos-vg/swap",
+        "pvcreate ${DISK_PART_VOL}",
+        "vgcreate ${VOL_VG_NAME} ${DISK_PART_VOL}",
+        #
+        # SWAP
+        #
+        "lvcreate -L 1G -n swap ${VOL_VG_NAME}",
+        "mkswap -L swap ${DISK_PART_SWAP}",
         "swapon -L swap",
-        # MAIN
-        # "mkfs.ext3 -L nixos /dev/vda3",
-        # "mount LABEL=nixos /mnt",
-        "lvcreate -l 100%FREE -n root nixos-vg",
-        "zpool create -f rpool /dev/nixos-vg/root",
-        "zfs create -o mountpoint=legacy rpool/root",
-        "mount -t zfs rpool/root /mnt",
+        #
+        # ROOT
+        #
+        "lvcreate -l 100%FREE -n root ${VOL_VG_NAME}",
+        "zpool create -f ${ZFS_POOL} ${DISK_PART_ROOT}",
+        "zfs set compression=on ${ZFS_POOL}",
+        "zfs create -p -o mountpoint=legacy ${ZFS_DS_ROOT}",
+        "zfs set xattr=sa ${ZFS_DS_ROOT}",
+        "zfs set acltype=posixacl ${ZFS_DS_ROOT}",
+        # "zfs snapshot ${ZFS_BLANK_ROOT_SNAPSHOT}",
+        "mount -t zfs ${ZFS_DS_ROOT} /mnt",
         "udevadm settle",
-        # END MAIN
-        "mkfs.vfat -n BOOT /dev/vda1",
+        #
+        # BOOT
+        #
+        "mkfs.vfat -n BOOT ${DISK_PART_BOOT}",
         "mkdir -p /mnt/boot",
         "mount LABEL=BOOT /mnt/boot",
     )
@@ -130,14 +139,14 @@ makeInstallerTest "basic-eyd" {
 
 #     # boot.loader.systemd-boot.enable = true;
 #     boot.loader.efi.canTouchEfiVariables = true;
-  
+
 #     # source: https://grahamc.com/blog/erase-your-darlings
 #     # boot.initrd.postDeviceCommands = lib.mkAfter '''
 #     #   zfs rollback -r ${ZFS_BLANK_ROOT_SNAPSHOT}
 #     #   zfs rollback -r ${ZFS_BLANK_HOME_SNAPSHOT}
 #     # ''';
 #     boot.initrd.luks.devices = {
-#       root = { 
+#       root = {
 #         device = "${DISK_PART_LUKS}";
 #         preLVM = true;
 #       };
@@ -145,7 +154,7 @@ makeInstallerTest "basic-eyd" {
 #     swapDevices = [
 #       { device = "${DISK_PART_SWAP}"; }
 #     ];
-  
+
 #     # source: https://grahamc.com/blog/nixos-on-zfs
 #     boot.kernelParams = lib.mkAfter [ "console=tty0" "elevator=none" ];
 #   '';
@@ -159,13 +168,13 @@ makeInstallerTest "basic-eyd" {
 #   #       "udevadm settle",
 #   #       "mkfs.fat -F 32 -n boot ${DISK_PART_BOOT}",
 #   #       "echo -n supersecret | cryptsetup luksFormat -q ${DISK_PART_LUKS} -",
-#   #       "echo -n supersecret | cryptsetup luksOpen ${DISK_PART_LUKS} ${LUKS_PV_NAME}",
-#   #       "pvcreate ${LUKS_PV_PATH}",
-#   #       "vgcreate ${LUKS_VG_NAME} ${LUKS_PV_PATH}",
-#   #       "lvcreate -L ${SWAP_AMT} -n swap ${LUKS_VG_NAME}",
+#   #       "echo -n supersecret | cryptsetup luksOpen ${DISK_PART_LUKS} ${VOL_PV_NAME}",
+#   #       "pvcreate ${VOL_PV_PATH}",
+#   #       "vgcreate ${VOL_VG_NAME} ${VOL_PV_PATH}",
+#   #       "lvcreate -L ${SWAP_AMT} -n swap ${VOL_VG_NAME}",
 #   #       "mkswap -L swap ${DISK_PART_SWAP}",
 #   #       "swapon ${DISK_PART_SWAP}",
-#   #       "lvcreate -l 100%FREE -n root ${LUKS_VG_NAME}",
+#   #       "lvcreate -l 100%FREE -n root ${VOL_VG_NAME}",
 #   #       "zpool create -f ${ZFS_POOL} ${DISK_PART_ROOT}",
 #   #       "zfs set compression=on ${ZFS_POOL}",
 #   #       # Root
@@ -235,13 +244,13 @@ makeInstallerTest "basic-eyd" {
 #         + " set 2 esp on",
 #         "mkfs.fat -F 32 -n boot ${DISK_PART_BOOT}",
 #         "echo -n supersecret | cryptsetup luksFormat -q ${DISK_PART_LUKS} -",
-#         "echo -n supersecret | cryptsetup luksOpen ${DISK_PART_LUKS} ${LUKS_PV_NAME}",
-#         "pvcreate ${LUKS_PV_PATH}",
-#         "vgcreate ${LUKS_VG_NAME} ${LUKS_PV_PATH}",
-#         "lvcreate -L ${SWAP_AMT} -n swap ${LUKS_VG_NAME}",
+#         "echo -n supersecret | cryptsetup luksOpen ${DISK_PART_LUKS} ${VOL_PV_NAME}",
+#         "pvcreate ${VOL_PV_PATH}",
+#         "vgcreate ${VOL_VG_NAME} ${VOL_PV_PATH}",
+#         "lvcreate -L ${SWAP_AMT} -n swap ${VOL_VG_NAME}",
 #         "mkswap -L swap ${DISK_PART_SWAP}",
 #         "swapon ${DISK_PART_SWAP}",
-#         "lvcreate -l 100%FREE -n root ${LUKS_VG_NAME}",
+#         "lvcreate -l 100%FREE -n root ${VOL_VG_NAME}",
 #         "zpool create -f ${ZFS_POOL} ${DISK_PART_ROOT}",
 #         "zfs set compression=on ${ZFS_POOL}",
 #         # Root
@@ -300,17 +309,17 @@ makeInstallerTest "basic-eyd" {
 
 #     # ZFS requires this to be set
 #     networking.hostId = "00000000";
-  
+
 #     boot.loader.systemd-boot.enable = true;
 #     boot.loader.efi.canTouchEfiVariables = true;
-  
+
 #     # source: https://grahamc.com/blog/erase-your-darlings
 #     boot.initrd.postDeviceCommands = lib.mkAfter '''
 #       zfs rollback -r ${ZFS_BLANK_ROOT_SNAPSHOT}
 #       zfs rollback -r ${ZFS_BLANK_HOME_SNAPSHOT}
 #     ''';
 #     boot.initrd.luks.devices = {
-#       root = { 
+#       root = {
 #         device = "${DISK_PART_LUKS}";
 #         preLVM = true;
 #       };
@@ -318,7 +327,7 @@ makeInstallerTest "basic-eyd" {
 #     swapDevices = [
 #       { device = "${DISK_PART_SWAP}"; }
 #     ];
-  
+
 #     # source: https://grahamc.com/blog/nixos-on-zfs
 #     boot.kernelParams = [ "elevator=none" ];
 #   '';
@@ -352,4 +361,3 @@ makeInstallerTest "basic-eyd" {
 #     )
 #   '';
 # }
-
