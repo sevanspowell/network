@@ -72,10 +72,10 @@ makeInstallerTest "basic-eyd" {
         "zfs set atime=off ${ZFS_DS_NIX}",
         "mkdir /mnt/nix",
         "mount -t zfs ${ZFS_DS_NIX} /mnt/nix",
-        # "zfs create -p -o mountpoint=legacy ${ZFS_DS_PERSIST}",
-        # "mkdir /mnt/persist",
-        # "mount -t zfs ${ZFS_DS_PERSIST} /mnt/persist",
-        # "zfs set com.sun:auto-snapshot=true ${ZFS_DS_PERSIST}",
+        "zfs create -p -o mountpoint=legacy ${ZFS_DS_PERSIST}",
+        "mkdir /mnt/persist",
+        "mount -t zfs ${ZFS_DS_PERSIST} /mnt/persist",
+        "zfs set com.sun:auto-snapshot=true ${ZFS_DS_PERSIST}",
         # "udevadm settle",
         #
         # BOOT
@@ -99,6 +99,13 @@ makeInstallerTest "basic-eyd" {
     # some reason.
     boot.zfs.devNodes = "/dev/disk/by-uuid/";
     networking.hostId = "00000000";
+
+    nix.nixPath =
+      [
+        "nixpkgs=/nix/var/nix/profiles/per-user/root/channels/nixos"
+        "nixos-config=/persist/etc/nixos/configuration.nix"
+        "/nix/var/nix/profiles/per-user/root/channels"
+      ];
   '';
   # enableOCR = true;
   # preBootCommands = ''

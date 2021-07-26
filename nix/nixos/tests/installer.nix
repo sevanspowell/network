@@ -129,8 +129,22 @@ let
           )
           machine.succeed("cat /mnt/etc/nixos/configuration.nix >&2")
 
+      with subtest("Move the NixOS configuration"):
+          machine.succeed("mkdir -p /mnt/persist/etc/nixos")
+          machine.succeed(
+              "mv /mnt/etc/nixos/hardware-configuration.nix /mnt/persist/etc/nixos"
+          )
+          machine.succeed("mv /mnt/etc/nixos/configuration.nix /mnt/persist/etc/nixos")
+          machine.succeed(
+              "ln -s /mnt/persist/etc/nixos/configuration.nix /mnt/etc/nixos/configuration.nix"
+          )
+          machine.succeed("ls -lah /mnt/etc/nixos >&2")
+          machine.succeed("ls -lah /mnt/persist/etc/nixos >&2")
+
       with subtest("Perform the installation"):
-          machine.succeed("nixos-install < /dev/null >&2")
+          machine.succeed(
+              "nixos-install -I 'nixos-config=/mnt/persist/etc/nixos/configuration.nix' < /dev/null >&2"
+          )
 
       with subtest("Do it again to make sure it's idempotent"):
           machine.succeed("nixos-install < /dev/null >&2")
@@ -138,6 +152,7 @@ let
       with subtest("Shutdown system after installation"):
           machine.succeed("umount /mnt/boot || true")
           machine.succeed("umount /mnt/nix || true")
+          machine.succeed("umount /mnt/persist || true")
           machine.succeed("umount /mnt")
           machine.succeed("sync")
           machine.shutdown()
@@ -186,7 +201,7 @@ let
                     forceGrubReinstallCount = 1;
                   }
               }",
-              "/etc/nixos/configuration.nix",
+              "/persist/etc/nixos/configuration.nix",
           )
 
       with subtest("Check whether nixos-rebuild works"):
@@ -214,7 +229,7 @@ let
                 forceGrubReinstallCount = 2;
               }
           }",
-          "/etc/nixos/configuration.nix",
+          "/persist/etc/nixos/configuration.nix",
       )
       machine.succeed("nixos-rebuild boot >&2")
       machine.shutdown()
