@@ -18,4 +18,5 @@ with pkgs;
 in rec {
   sandbox = callTest ./sandbox.nix {};
   sandbox-two = callTest ./sandbox-two.nix {};
+  test-module = callTest ./test-module.nix {};
 }
