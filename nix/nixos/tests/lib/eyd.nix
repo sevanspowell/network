@@ -44,7 +44,7 @@ rec {
       # }) nodes; 
 
       # Make every node an "installer" first, so we can create appropriate
-      # partitions, then boot into node-specific config.
+      # partitions, then boot into node-specific config in the test script.
       nodes = lib.mapAttrs (machine: module: {
         imports = [
           ../../installer-test.nix

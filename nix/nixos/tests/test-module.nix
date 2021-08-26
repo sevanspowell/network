@@ -75,12 +75,14 @@ in
         bootLoader = "grub";
         grubVersion = 2;
 
-        createPartitions = "";
-        preBootCommands = "";
-        postBootCommands = "";
         grubDevice = "/dev/vda";
         grubIdentifier = "uuid";
         grubUseEfi = true;
+        forceGrubReinstallCount = 0;
+
+        createPartitions = "";
+        preBootCommands = "";
+        postBootCommands = "";
         enableOCR = false;
       };
     };

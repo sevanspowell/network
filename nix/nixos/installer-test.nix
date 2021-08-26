@@ -1,3 +1,4 @@
+# Configuration of a machine running some sort of install test
 { config, pkgs, lib, modulesPath, ... }:
 
 with lib;
