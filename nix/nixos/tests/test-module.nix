@@ -1,7 +1,7 @@
-{ config, pkgs, lib, ... }:
+{ config, system, pkgs, lib, ... }:
 
 let
-  eyd = import ./lib/eyd.nix { inherit lib; };
+  eyd = import ./lib/eyd.nix { inherit lib pkgs system; };
 
   sources = import ../../sources.nix;
 
@@ -80,57 +80,53 @@ in
         grubUseEfi = true;
         forceGrubReinstallCount = 0;
 
-        createPartitions = "";
+        createPartitions = ''
+          machine.succeed(
+              "flock ${DISK_PATH} parted --script ${DISK_PATH} -- mklabel gpt"
+              + " mkpart ESP fat32 1M 50MiB"  # /boot
+              + " set 1 boot on"
+              + " mkpart primary 50MiB -1MiB",  # /
+              "udevadm settle",
+              "pvcreate ${DISK_PART_VOL}",
+              "vgcreate ${VOL_VG_NAME} ${DISK_PART_VOL}",
+              #
+              # SWAP
+              #
+              "lvcreate -L 1G -n swap ${VOL_VG_NAME}",
+              "mkswap -L swap ${DISK_PART_SWAP}",
+              "swapon -L swap",
+              #
+              # ROOT
+              #
+              "lvcreate -l 100%FREE -n root ${VOL_VG_NAME}",
+              "zpool create -f ${ZFS_POOL} ${DISK_PART_ROOT}",
+              "zfs set compression=on ${ZFS_POOL}",
+              "zfs create -p -o mountpoint=legacy ${ZFS_DS_ROOT}",
+              "zfs set xattr=sa ${ZFS_DS_ROOT}",
+              "zfs set acltype=posixacl ${ZFS_DS_ROOT}",
+              "zfs snapshot ${ZFS_BLANK_ROOT_SNAPSHOT}",
+              "mount -t zfs ${ZFS_DS_ROOT} /mnt",
+              "zfs create -p -o mountpoint=legacy ${ZFS_DS_NIX}",
+              "zfs set atime=off ${ZFS_DS_NIX}",
+              "mkdir /mnt/nix",
+              "mount -t zfs ${ZFS_DS_NIX} /mnt/nix",
+              "zfs create -p -o mountpoint=legacy ${ZFS_DS_PERSIST}",
+              "mkdir /mnt/persist",
+              "mount -t zfs ${ZFS_DS_PERSIST} /mnt/persist",
+              "zfs set com.sun:auto-snapshot=true ${ZFS_DS_PERSIST}",
+              # "udevadm settle",
+              #
+              # BOOT
+              #
+              "mkfs.vfat -n BOOT ${DISK_PART_BOOT}",
+              "mkdir -p /mnt/boot",
+              "mount LABEL=BOOT /mnt/boot",
+              "udevadm settle",
+          )
+        '';
         preBootCommands = "";
         postBootCommands = "";
         enableOCR = false;
       };
-    };
-
-    createPartitions = {
-      machine = ''
-        machine.succeed(
-            "flock ${DISK_PATH} parted --script ${DISK_PATH} -- mklabel gpt"
-            + " mkpart ESP fat32 1M 50MiB"  # /boot
-            + " set 1 boot on"
-            + " mkpart primary 50MiB -1MiB",  # /
-            "udevadm settle",
-            "pvcreate ${DISK_PART_VOL}",
-            "vgcreate ${VOL_VG_NAME} ${DISK_PART_VOL}",
-            #
-            # SWAP
-            #
-            "lvcreate -L 1G -n swap ${VOL_VG_NAME}",
-            "mkswap -L swap ${DISK_PART_SWAP}",
-            "swapon -L swap",
-            #
-            # ROOT
-            #
-            "lvcreate -l 100%FREE -n root ${VOL_VG_NAME}",
-            "zpool create -f ${ZFS_POOL} ${DISK_PART_ROOT}",
-            "zfs set compression=on ${ZFS_POOL}",
-            "zfs create -p -o mountpoint=legacy ${ZFS_DS_ROOT}",
-            "zfs set xattr=sa ${ZFS_DS_ROOT}",
-            "zfs set acltype=posixacl ${ZFS_DS_ROOT}",
-            "zfs snapshot ${ZFS_BLANK_ROOT_SNAPSHOT}",
-            "mount -t zfs ${ZFS_DS_ROOT} /mnt",
-            "zfs create -p -o mountpoint=legacy ${ZFS_DS_NIX}",
-            "zfs set atime=off ${ZFS_DS_NIX}",
-            "mkdir /mnt/nix",
-            "mount -t zfs ${ZFS_DS_NIX} /mnt/nix",
-            "zfs create -p -o mountpoint=legacy ${ZFS_DS_PERSIST}",
-            "mkdir /mnt/persist",
-            "mount -t zfs ${ZFS_DS_PERSIST} /mnt/persist",
-            "zfs set com.sun:auto-snapshot=true ${ZFS_DS_PERSIST}",
-            # "udevadm settle",
-            #
-            # BOOT
-            #
-            "mkfs.vfat -n BOOT ${DISK_PART_BOOT}",
-            "mkdir -p /mnt/boot",
-            "mount LABEL=BOOT /mnt/boot",
-            "udevadm settle",
-        )
-      '';
     };
   }

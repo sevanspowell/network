@@ -1,4 +1,4 @@
-{ lib }:
+{ pkgs, system, lib }:
 
 rec {
   extraConfig = {
@@ -20,7 +20,7 @@ rec {
       ];
   };
 
-  installScript = { nodes, createPartitions }:
+  installScript = { nodes, installerConfig }:
     lib.concatStringsSep "\n" (
       lib.mapAttrsToList (machine: module: ''
         ${machine}.start()
@@ -31,13 +31,39 @@ rec {
         with subtest("Wait for hard disks to appear in /dev"):
             ${machine}.succeed("udevadm settle")
 
-        ${createPartitions.machine or ""}
+        ${installerConfig."${machine}".createPartitions or ""}
+
+        with subtest("Create the NixOS configuration"):
+            machine.succeed("nixos-generate-config --root /mnt")
+            machine.succeed("cat /mnt/etc/nixos/hardware-configuration.nix >&2")
+            machine.succeed(
+                "${(nodeCfg module).config.system.build.toplevel}/bin/switch-to-configuration test"
+            )
+            machine.succeed("cat /mnt/etc/nixos/configuration.nix >&2")
 
         ${machine}.shutdown()
       '') nodes
     );
 
-  mkTest = { nodes, testScript, installerConfig, createPartitions }:
+   nodeCfg = configuration: import "${pkgs.path}/nixos/lib/eval-config.nix" {
+     inherit system;
+     modules = [ configuration ];
+     baseModules =  (import "${pkgs.path}/nixos/modules/module-list.nix") ++
+       [ "${pkgs.path}/nixos/modules/virtualisation/qemu-vm.nix"
+         "${pkgs.path}/nixos/modules/testing/test-instrumentation.nix" # !!! should only get added for automated test runs
+         { key = "no-manual"; documentation.nixos.enable = false; }
+         { key = "no-revision";
+           # Make the revision metadata constant, in order to avoid needless retesting.
+           # The human version (e.g. 21.05-pre) is left as is, because it is useful
+           # for external modules that test with e.g. nixosTest and rely on that
+           # version number.
+           config.system.nixos.revision = lib.mkForce "constant-nixos-revision";
+         }
+         # { key = "nodes"; _module.args.nodes = nodes; }
+       ];
+   };
+
+  mkTest = { nodes, testScript, installerConfig }:
     {
       # nodes = lib.mapAttrs (machine: module: {
       #   imports = [ module extraConfig ];
@@ -58,7 +84,7 @@ rec {
 
       testScript =
         lib.concatStringsSep "\n" [
-          (installScript { inherit nodes createPartitions; })
+          (installScript { inherit nodes installerConfig ; })
           testScript
         ];
     };
