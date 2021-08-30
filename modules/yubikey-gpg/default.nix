@@ -101,13 +101,14 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    programs = {
-      ssh.startAgent = false;
-      gnupg.agent = {
-        enable = true;
-        enableSSHSupport = true;
-      };
-    };
+    # programs = {
+    #   ssh.startAgent = false;
+    #   gnupg.agent = {
+    #     enable = true;
+    #     enableSSHSupport = true;
+    #     pinentryFlavor = "gnome3";
+    #   };
+    # };
 
     environment.systemPackages = with pkgs; [
       gnupg
@@ -120,21 +121,34 @@ in
     services.dbus.enable = true;
     services.pcscd.enable = true;
     services.udev.packages = [ pkgs.yubikey-personalization ];
-  
-    environment.shellInit = ''
-      export GPG_TTY="$(tty)"
-      export SSH_AUTH_SOCK=$(gpgconf --list-dirs agent-ssh-socket)
-      gpgconf --launch gpg-agent
-    '';
 
     services.udev.extraRules = concatStrings (mapAttrsToList (user: opts: ''
       ACTION=="add|change", SUBSYSTEM=="usb", ATTRS{idVendor}=="1050", ATTRS{idProduct}=="0407", RUN+="${clearYubikeyUser user}"
     '') cfg.users);
 
     home-manager.users = mapAttrs (user: opts: {...}: {
+
+      services.gpg-agent = {
+        enable = true;
+        enableSshSupport = true;
+        enableScDaemon = true;
+        inherit (opts) pinentryFlavor;
+        extraConfig = ''
+        debug-level guru
+        log-file /var/log/gpg-agent.log
+        '';
+      };
+
       home.file.".gnupg/gpg.conf".text       = import ./gpg.conf.nix {};
-      home.file.".gnupg/gpg-agent.conf".text = import ./gpg-agent.conf.nix { inherit pkgs; inherit (opts) pinentryFlavor; };
+      # home.file.".gnupg/gpg-agent.conf".text = import ./gpg-agent.conf.nix { inherit pkgs; inherit (opts) pinentryFlavor; };
       home.file.".gnupg/scdaemon.conf".text  = import ./scdaemon.conf.nix {};
+
+      home.file.".bashrc".text = ''
+        export GPG_TTY="$(tty)"
+        export SSH_AUTH_SOCK=$(gpgconf --list-dirs agent-ssh-socket)
+        gpgconf --launch gpg-agent
+      '';
+
     }) cfg.users;
   };
 }
