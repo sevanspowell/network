@@ -1,4 +1,6 @@
 { pkgs
+, system
+, lib
 , supportedSystems ? [ "x86_64-linux" ]
 }:
 
@@ -19,4 +21,6 @@ in rec {
   sandbox = callTest ./sandbox.nix {};
   sandbox-two = callTest ./sandbox-two.nix {};
   test-module = callTest ./test-module.nix {};
+
+  hardwareConf = (import ./lib/eyd.nix { inherit pkgs system lib; }).hardwareConfiguration "";
 }
