@@ -58,6 +58,18 @@ rec {
           cpfromfs -p -P 1 -t ext4 -i $diskImage /etc/nixos/configuration.nix $out/
       '';
     });
+
+  hardwareConfiguration2 = config: createPartitionScript:
+    (import ./mk-eyd-image.nix {
+      inherit pkgs lib;
+      config = installedSystem config;
+      partitionDiskScript = createPartitionScript;
+      rootPartition = "1";
+      diskSize = 2048;
+      postVM = ''
+          cpfromfs -p -P 1 -t ext4 -i $diskImage /etc/nixos/hardware-configuration.nix $out/
+      '';
+    });
   # hardwareConfiguration = createPartitionScript: pkgs.vmTools.runInLinuxVM (
   #   pkgs.runCommand "generate-hardware-configuration"
   #     { preVM = null;
