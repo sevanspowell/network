@@ -101,14 +101,14 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    # programs = {
-    #   ssh.startAgent = false;
-    #   gnupg.agent = {
-    #     enable = true;
-    #     enableSSHSupport = true;
-    #     pinentryFlavor = "gnome3";
-    #   };
-    # };
+    programs = {
+      ssh.startAgent = false;
+      gnupg.agent = {
+        enable = true;
+        enableSSHSupport = true;
+        pinentryFlavor = "gtk2";
+      };
+    };
 
     environment.systemPackages = with pkgs; [
       gnupg
@@ -128,19 +128,19 @@ in
 
     home-manager.users = mapAttrs (user: opts: {...}: {
 
-      services.gpg-agent = {
-        enable = true;
-        enableSshSupport = true;
-        enableScDaemon = true;
-        inherit (opts) pinentryFlavor;
-        extraConfig = ''
-        debug-level guru
-        log-file /var/log/gpg-agent.log
-        '';
-      };
+      # services.gpg-agent = {
+      #   enable = true;
+      #   enableSshSupport = true;
+      #   enableScDaemon = true;
+      #   inherit (opts) pinentryFlavor;
+      #   extraConfig = ''
+      #   debug-level guru
+      #   log-file /var/log/gpg-agent.log
+      #   '';
+      # };
 
       home.file.".gnupg/gpg.conf".text       = import ./gpg.conf.nix {};
-      # home.file.".gnupg/gpg-agent.conf".text = import ./gpg-agent.conf.nix { inherit pkgs; inherit (opts) pinentryFlavor; };
+      home.file.".gnupg/gpg-agent.conf".text = import ./gpg-agent.conf.nix { inherit pkgs; inherit (opts) pinentryFlavor; };
       home.file.".gnupg/scdaemon.conf".text  = import ./scdaemon.conf.nix {};
 
       home.file.".bashrc".text = ''
