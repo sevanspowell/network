@@ -63,9 +63,8 @@ rec {
     (import ./mk-eyd-image.nix {
       inherit pkgs lib;
       config = installedSystem config;
-      partitionDiskScript = createPartitionScript;
-      rootPartition = "1";
-      diskSize = 2048;
+      createPartitionScript = createPartitionScript;
+      # rootPartition = "1";
       postVM = ''
           cpfromfs -p -P 1 -t ext4 -i $diskImage /etc/nixos/hardware-configuration.nix $out/
       '';
