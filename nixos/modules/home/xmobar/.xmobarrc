@@ -1,0 +1,28 @@
+Config { font = "xft:Source Code Pro:bold:size=9:antialias=true"
+       , borderColor = "black"
+       , bgColor = "#252426"
+       , fgColor = "#b2b2b2"
+       , position = BottomW L 100
+       , commands = [ Run Cpu ["-L","3","-H","50","--normal","#2d9574","--high","red"] 10
+                    , Run Memory [ "--template", "Mem: <usedratio>%"
+                                 , "--Low"     , "20"          -- units: %
+                                 , "--High"    , "80"          -- units: %
+                                 , "--low"     , "#2d9574"
+                                 , "--normal"  , "orange"
+                                 , "--high"    , "red"
+                                 ] 10
+                    , Run Swap [] 10
+                    , Run Date "%a %b %_d %T" "date" 10
+                    , Run DynNetwork [ "--template" , "<dev>: <tx>kB/s"
+                                     , "--Low"      , "50000"   -- units: B/s
+                                     , "--High"     , "500000"   -- units: B/s
+                                     , "--low"      , "#2d9574"
+                                     , "--normal"   , "orange"
+                                     , "--high"     , "red"
+                                     ] 10
+                    , Run StdinReader
+                    ]
+       , sepChar = "%"
+       , alignSep = "}{"
+       , template = "%StdinReader% }{ %cpu% | %memory% | %swap% | %dynnetwork% | <fc=#bc6ec5>%date%</fc> "
+       }
