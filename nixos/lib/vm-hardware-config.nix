@@ -4,7 +4,8 @@
 # 4. Generate hardware-configuration.nix into additional disk
 # 5. Copy out hardware-configuration.nix
 #
-# For this to be useful, you must partition your disk with
+# For this to be useful, you must partition your disk with labels, so that the
+# generated hardware-configuration.nix can be used across machines.
 { pkgs
 , system
 , partitionDiskScript
@@ -51,6 +52,7 @@ let
       config.config.system.build.nixos-install
       config.config.system.build.nixos-enter
       config.config.system.build.nixos-generate-config
+      systemd
       nix
     ] ++ stdenv.initialPath);
 in
@@ -62,6 +64,8 @@ runInMachine {
     export PATH=${binPath}
 
     ${partitionDiskScript}
+    # Force nixos-generate-config to use labels so we're portable across vms
+    rm -rf /dev/disk/by-uuid/*
 
     nixos-generate-config --root ${rootMount}
     cp ${rootMount}/etc/nixos/hardware-configuration.nix $out/
