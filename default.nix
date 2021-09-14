@@ -57,4 +57,16 @@ in
       mount /dev/disk/by-label/nixos /mnt
     '';
   };
+
+  # partition-disks
+  # nixos-generate-config --root /mnt
+  # boot.loader.grub.device = "/dev/vda";
+  # nixos-install root /mnt
+  installer-test-helper = pkgs.callPackage ./nixos/lib/vm-install-test.nix {
+    inherit system;
+    partitionDiskScript = pkgs.callPackage ./nixos/scripts/partition/encrypted.nix {
+      disk = "/dev/vda";
+      swapSize = "1G";
+    };
+  };
 }

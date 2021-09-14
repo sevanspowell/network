@@ -1,8 +1,8 @@
-{ diskSize }:
+{ diskSize ? (8 * 1024) }:
 
 # Simple configuration for a virtualized installer. Mimics a boot from ISO by
 # booting off /dev/vdb and allowing user to make full use of /dev/vda
-{ config, modulesPath, ... }:
+{ pkgs, config, modulesPath, ... }:
 {
   imports = [
     "${modulesPath}/profiles/installation-device.nix"
