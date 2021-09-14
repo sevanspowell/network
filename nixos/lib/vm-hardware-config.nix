@@ -1,7 +1,7 @@
 # 1. Create a base disk image using the installer profile.
 # 2. Add an additional disk to partition
 # 3. Partition disks on additional disk
-# 4. Generate hardware-configuration.nix into additional disk
+# 4. Generate hardware-configuration.nix on additional disk
 # 5. Copy out hardware-configuration.nix
 #
 # For this to be useful, you must partition your disk with labels, so that the
@@ -19,21 +19,9 @@
 let
   nixpkgs = pkgs.lib.cleanSource pkgs.path;
 
-  machineConfiguration = {
-      imports = [
-        "${nixpkgs}/nixos/modules/profiles/installation-device.nix"
-        "${nixpkgs}/nixos/modules/profiles/base.nix"
-        "${nixpkgs}/nixos/modules/virtualisation/qemu-vm.nix"
-      ];
-
-      # virtualisation.qemu.options = [];
-      virtualisation.diskSize = diskSize;
-      virtualisation.emptyDiskImages = [
-        # Small root disk for installer
-        512
-      ];
-      # Boot off small root disk
-      virtualisation.bootDevice = "/dev/vdb";
+  # Configuration for "installer" machine
+  machineConfiguration = import ../modules/installer-vm {
+    inherit diskSize;
   };
 
   config = import "${nixpkgs}/nixos/lib/eval-config.nix" {
