@@ -45,4 +45,16 @@ in
   vm = (vmConfig ./nodes/plum/configuration.nix).config.system.build.vm;
   iso = isoConfig.config.system.build.isoImage;
   install = installerEnv ./nodes/plum/configuration.nix;
+
+  # nix-build -A tests.installer.x86_64-linux.test.driverInteractive
+  tests = pkgs.callPackage ./nixos/tests/default.nix { inherit system; };
+
+  hardware-config = pkgs.callPackage ./nixos/lib/vm-hardware-config.nix {
+    inherit system;
+    partitionDiskScript = ''
+      mkfs.ext4 -b ${toString (4 * 1024)} -F -L nixos /dev/vda
+      mkdir -p /mnt
+      mount /dev/disk/by-label/nixos /mnt
+    '';
+  };
 }

@@ -1,0 +1,71 @@
+# 1. Create a base disk image using the installer profile.
+# 2. Add an additional disk to partition
+# 3. Partition disks on additional disk
+# 4. Generate hardware-configuration.nix into additional disk
+# 5. Copy out hardware-configuration.nix
+#
+# For this to be useful, you must partition your disk with
+{ pkgs
+, system
+, partitionDiskScript
+# ^ Script to partition disks on /dev/vda
+, diskSize ? (8 * 1024)
+# ^ Size of initial disk (M)
+, rootMount ? "/mnt"
+# ^ Where the root partition is mounted after running partitionDiskScript
+}:
+
+let
+  nixpkgs = pkgs.lib.cleanSource pkgs.path;
+
+  machineConfiguration = {
+      imports = [
+        "${nixpkgs}/nixos/modules/profiles/installation-device.nix"
+        "${nixpkgs}/nixos/modules/profiles/base.nix"
+        "${nixpkgs}/nixos/modules/virtualisation/qemu-vm.nix"
+      ];
+
+      # virtualisation.qemu.options = [];
+      virtualisation.diskSize = diskSize;
+      virtualisation.emptyDiskImages = [
+        # Small root disk for installer
+        512
+      ];
+      # Boot off small root disk
+      virtualisation.bootDevice = "/dev/vdb";
+  };
+
+  config = import "${nixpkgs}/nixos/lib/eval-config.nix" {
+    inherit system;
+    modules = [
+      machineConfiguration
+    ];
+  };
+
+  binPath = with pkgs; lib.makeBinPath (
+    [ rsync
+      util-linux
+      parted
+      e2fsprogs
+      lkl
+      config.config.system.build.nixos-install
+      config.config.system.build.nixos-enter
+      config.config.system.build.nixos-generate-config
+      nix
+    ] ++ stdenv.initialPath);
+in
+
+with import "${nixpkgs}/nixos/lib/testing-python.nix" { inherit system pkgs; };
+
+runInMachine {
+  drv = pkgs.runCommand "gen-hardware-config" { } ''
+    export PATH=${binPath}
+
+    ${partitionDiskScript}
+
+    nixos-generate-config --root ${rootMount}
+    cp ${rootMount}/etc/nixos/hardware-configuration.nix $out/
+  '';
+
+  machine = machineConfiguration;
+}
