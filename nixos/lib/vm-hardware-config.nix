@@ -34,8 +34,12 @@ let
   binPath = with pkgs; lib.makeBinPath (
     [ rsync
       util-linux
+      dosfstools
       parted
+      kmod
+      lvm2
       e2fsprogs
+      cryptsetup
       lkl
       config.config.system.build.nixos-install
       config.config.system.build.nixos-enter
