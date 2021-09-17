@@ -47,7 +47,7 @@ let
     installerConfiguration
     ({ config, ...}: {
       environment.systemPackages = [
-        partitionDiskScript
+        (pkgs.writeShellScriptBin "partition-disks" partitionDiskScript)
         (pkgs.writeShellScriptBin "install-nixos" ''
           nixos-install --root /mnt --system ${installedConfig} --no-root-passwd
         '')
@@ -61,8 +61,7 @@ let
   machineConfig = evalConfig [
     configuration
     "${pkgs.callPackage ./vm-hardware-config.nix {
-      inherit system diskSize;
-      partitionDiskScript = "${partitionDiskScript}/bin/partition-disks";
+      inherit system diskSize partitionDiskScript;
     }}/hardware-configuration.nix"
   ];
 

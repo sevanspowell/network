@@ -47,6 +47,8 @@ let
       systemd
       nix
     ] ++ stdenv.initialPath);
+
+  partitionDiskScriptBin = pkgs.writeShellScriptBin "partition-disks" partitionDiskScript;
 in
 
 with import "${nixpkgs}/nixos/lib/testing-python.nix" { inherit system pkgs; };
@@ -55,7 +57,7 @@ runInMachine {
   drv = pkgs.runCommand "gen-hardware-config" { } ''
     export PATH=${binPath}
 
-    ${partitionDiskScript}
+    ${partitionDiskScriptBin}/bin/partition-disks
     # Force nixos-generate-config to use labels so we're portable across vms
     rm -rf /dev/disk/by-uuid/*
 

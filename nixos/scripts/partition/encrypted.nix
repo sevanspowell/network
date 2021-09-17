@@ -5,7 +5,7 @@
 # ^ Whether to prompt the user for an encryption password, or to use "supersecret"
 }:
 
-pkgs.writeShellScriptBin "partition-disks" ''
+''
   set -euo pipefail
 
   flock ${disk} parted --script ${disk} -- \

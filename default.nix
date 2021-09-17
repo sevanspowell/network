@@ -40,6 +40,11 @@ let
       pkgs.writeShellScriptBin "run-${systemName}-vm" ''
         ${(vmConfig configuration).config.system.build.vm}/bin/run-${systemName}-vm -boot d -cdrom ${isoImage}/iso/${isoName}
       '';
+
+  partitionDiskScript = import ./nixos/scripts/partition/simple.nix {
+    inherit pkgs;
+    disk = "/dev/vda";
+  };
 in
 {
   vm = (vmConfig ./nodes/plum/configuration.nix).config.system.build.vm;
@@ -50,25 +55,13 @@ in
   tests = pkgs.callPackage ./nixos/tests/default.nix { inherit system; };
 
   hardware-config = pkgs.callPackage ./nixos/lib/vm-hardware-config.nix {
-    inherit system;
-    partitionDiskScript = "${pkgs.callPackage ./nixos/scripts/partition/encrypted.nix {
-      disk = "/dev/vda";
-      swapSize = "1G";
-    }}/bin/partition-disks";
-    # partitionDiskScript = ''
-    #   mkfs.ext4 -b ${toString (4 * 1024)} -F -L nixos /dev/vda
-    #   mkdir -p /mnt
-    #   mount /dev/disk/by-label/nixos /mnt
-    # '';
+    inherit system partitionDiskScript;
   };
 
   # partition-disks && install-nixos
   # $ qemu-kvm -m 384 -netdev user,id=net0 -device virtio-net-pci,netdev=net0 $QEMU_OPTS -drive file=./nixos.qcow2,if=virtio,werror=report -cpu max -m 1024
   # <3
   installer-test-helper = pkgs.callPackage ./nixos/lib/vm-install-test.nix {
-    inherit system;
-    partitionDiskScript = pkgs.callPackage ./nixos/scripts/partition/simple.nix {
-      disk = "/dev/vda";
-    };
+    inherit system partitionDiskScript;
   };
 }

@@ -2,7 +2,7 @@
 , disk
 }:
 
-pkgs.writeShellScriptBin "partition-disks" ''
+''
   set -euo pipefail
 
   flock ${disk} parted --script ${disk} -- \
