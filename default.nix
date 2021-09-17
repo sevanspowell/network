@@ -63,16 +63,6 @@ in
   };
 
   # partition-disks && install-nixos
-  # TODO use a simple grub legacy partition script from installer or hibernate tests
-  # installer-test-helper = pkgs.callPackage ./nixos/lib/vm-install-test.nix {
-  #   inherit system;
-  #   partitionDiskScript = pkgs.callPackage ./nixos/scripts/partition/encrypted.nix {
-  #     disk = "/dev/vda";
-  #     swapSize = "1G";
-  #   };
-  # };
-
-  # partition-disks && install-nixos
   # $ qemu-kvm -m 384 -netdev user,id=net0 -device virtio-net-pci,netdev=net0 $QEMU_OPTS -drive file=./nixos.qcow2,if=virtio,werror=report -cpu max -m 1024
   # <3
   installer-test-helper = pkgs.callPackage ./nixos/lib/vm-install-test.nix {
@@ -81,15 +71,4 @@ in
       disk = "/dev/vda";
     };
   };
-
-  # BUG: This is producing wrong bios for UEFI...
-  bios = ''${pkgs.OVMF.fd}/FV/${if pkgs.stdenv.isAarch64 then "QEMU_EFI.fd" else "OVMF.fd"}'';
-
-  working = (import "${nixpkgs}/nixos/lib/eval-config.nix" {
-    inherit system;
-    modules = [
-      "${nixpkgs}/nixos/modules/installer/cd-dvd/channel.nix"
-      "${nixpkgs}/nixos/modules/installer/cd-dvd/installation-cd-minimal.nix"
-    ];
-  })
 }
