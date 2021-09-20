@@ -6,6 +6,8 @@
 }:
 
 let
+  sources = import ../../nix/sources.nix;
+
   configuration = { config, modulesPath, ... }: {
     imports = [
       # "${modulesPath}/testing/test-instrumentation.nix"
@@ -26,6 +28,47 @@ let
         users.extraUsers.root.initialPassword = "";
       }
       {
+        imports = [
+          "${sources.home-manager}/nixos"
+        ];
+
+        home-manager.users.sam = {...}: {
+          imports = [
+            ../../nixos/modules/home/xmobar
+            ../../nixos/modules/home/xmonad
+            ../../nixos/modules/home/xresources
+          ];
+        };
+
+        environment.systemPackages = (with pkgs; [
+          git
+          rxvt_unicode-with-plugins
+          vim
+          xscreensaver
+        ]) ++
+        (with pkgs.haskellPackages; [
+          xmobar
+        ]);
+
+        networking.hostName = "plum";
+        console = {
+          font = "Lat2-Terminus16";
+          keyMap = "us";
+        };
+        i18n = {
+          defaultLocale = "en_US.UTF-8";
+        };
+        time.timeZone = "Australia/Perth";
+        services.sshd.enable = true;
+        services.openssh.enable = true;
+        services.postgresql = {
+          enable = true;
+          enableTCPIP = false;
+        };
+        sound.enable = true;
+        hardware.pulseaudio.enable = true;
+        hardware.pulseaudio.support32Bit = true;
+
         services.xserver = {
           enable = true;
           layout = "us";
