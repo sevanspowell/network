@@ -6,11 +6,81 @@
 }:
 
 let
-  configuration = { modulesPath, ... }: {
+  configuration = { config, modulesPath, ... }: {
     imports = [
-      "${modulesPath}/testing/test-instrumentation.nix"
+      # "${modulesPath}/testing/test-instrumentation.nix"
       "${modulesPath}/profiles/qemu-guest.nix"
       "${modulesPath}/profiles/minimal.nix"
+      # ../../nodes/plum/configuration.nix
+      {
+        users.mutableUsers = false;
+        users.extraUsers.sam.initialPassword = "";
+        users.extraUsers.sam = {
+          createHome = true;
+          extraGroups = ["wheel" "video" "audio" "disk" "networkmanager" "plugdev" ];
+          group = "users";
+          home = "/home/sam";
+          isNormalUser = true;
+          uid = 1000;
+        };
+        users.extraUsers.root.initialPassword = "";
+      }
+      {
+        services.xserver = {
+          enable = true;
+          layout = "us";
+          desktopManager.xterm.enable = false;
+          xkbOptions="ctrl:nocaps";
+
+          displayManager.defaultSession = "none+xmonad";
+
+          windowManager.xmonad = {
+            enable = true;
+            enableContribAndExtras = true;
+          };
+        };
+      }
+      {
+        # Don't run ntpd in the guest.  It should get the correct time from KVM.
+        services.timesyncd.enable = false;
+
+        # When building a regular system configuration, override whatever
+        # video driver the host uses.
+        services.xserver.videoDrivers = pkgs.lib.mkVMOverride [ "modesetting" ];
+        services.xserver.defaultDepth = pkgs.lib.mkVMOverride 0;
+        services.xserver.resolutions = pkgs.lib.mkVMOverride [ { x = 1024; y = 768; } ];
+        services.xserver.monitorSection =
+          ''
+          # Set a higher refresh rate so that resolutions > 800x600 work.
+          HorizSync 30-140
+          VertRefresh 50-160
+          '';
+
+
+        # Wireless won't work in the VM.
+        networking.wireless.enable = pkgs.lib.mkVMOverride false;
+        services.connman.enable = pkgs.lib.mkVMOverride false;
+
+        # Speed up booting by not waiting for ARP.
+        networking.dhcpcd.extraConfig = "noarp";
+
+        networking.usePredictableInterfaceNames = false;
+
+        system.requiredKernelConfig = with config.lib.kernelConfig;
+          [ (isEnabled "VIRTIO_BLK")
+            (isEnabled "VIRTIO_PCI")
+            (isEnabled "VIRTIO_NET")
+            (isEnabled "EXT4_FS")
+            (isEnabled "NET_9P_VIRTIO")
+            (isEnabled "9P_FS")
+            (isYes "BLK_DEV")
+            (isYes "PCI")
+            (isYes "NETDEVICES")
+            (isYes "NET_CORE")
+            (isYes "INET")
+            (isYes "NETWORK_FILESYSTEMS")
+          ];
+      }
     ];
 
     hardware.enableAllFirmware = pkgs.lib.mkForce false;
@@ -63,6 +133,13 @@ let
     "${pkgs.callPackage ./vm-hardware-config.nix {
       inherit system diskSize partitionDiskScript;
     }}/hardware-configuration.nix"
+    # I think XLibs are disabled because we're presuming that this won't be
+    # executed in a graphical environment. But we might do, and it causes some
+    # graphical applications to fail to build, which prevents us from testing
+    # our configurations.
+    {
+      environment.noXlibs = pkgs.lib.mkForce false;
+    }
   ];
 
   installedConfig = machineConfig.config.system.build.toplevel;
