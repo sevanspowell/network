@@ -30,4 +30,8 @@ in
       ''
         emacs --batch --eval "(require 'org)" --eval '(org-babel-tangle-file "${./configuration.org}" (getenv "out"))'
       '';
+
+  fonts.fonts = with pkgs; [
+    source-code-pro
+  ];
 }

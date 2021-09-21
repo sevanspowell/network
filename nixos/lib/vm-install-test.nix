@@ -47,6 +47,7 @@ let
 
         home-manager.users.sam = {...}: {
           imports = [
+            ../../nixos/modules/home/emacs
             ../../nixos/modules/home/xmobar
             ../../nixos/modules/home/xmonad
             ../../nixos/modules/home/xresources
