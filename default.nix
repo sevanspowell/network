@@ -65,4 +65,9 @@ rec {
   installer-test-helper = pkgs.callPackage ./nixos/lib/vm-install-test.nix {
     inherit system partitionDiskScript;
   };
+
+  # Rebuild on system:
+  # pathToConfig=$(nix-build --no-out-link -A $node.system)
+  # nix-env -p /nix/var/nix/profiles/system --set $pathToConfig
+  # $pathToConfig/bin/switch-to-configuration switch
 }
