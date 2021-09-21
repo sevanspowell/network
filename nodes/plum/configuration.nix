@@ -76,7 +76,7 @@ in
     layout = "us";
     desktopManager.xterm.enable = false;
     xkbOptions="ctrl:nocaps";
-    videoDrivers = ["nvidia"];
+    # videoDrivers = ["nvidia"];
 
     displayManager.defaultSession = "none+xmonad";
 

@@ -8,6 +8,12 @@
 let
   sources = import ../../nix/sources.nix;
 
+  src = pkgs.lib.cleanSource ../..;
+  srcPkg = pkgs.runCommand "copy-network-repo" {} ''
+    mkdir $out
+    cp -r ${src}/* $out
+  '';
+
   configuration = { config, modulesPath, ... }: {
     imports = [
       # "${modulesPath}/testing/test-instrumentation.nix"
@@ -28,6 +34,13 @@ let
         users.extraUsers.root.initialPassword = "";
       }
       {
+        environment.systemPackages = [ srcPkg ];
+
+        boot.postBootCommands = ''
+          echo ${srcPkg} > /root/src.out
+        '';
+      }
+      {
         imports = [
           "${sources.home-manager}/nixos"
         ];
@@ -44,6 +57,7 @@ let
           git
           rxvt_unicode-with-plugins
           vim
+          srcPkg
           xscreensaver
         ]) ++
         (with pkgs.haskellPackages; [

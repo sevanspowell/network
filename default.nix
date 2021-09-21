@@ -46,7 +46,7 @@ let
     disk = "/dev/vda";
   };
 in
-{
+rec {
   vm = (vmConfig ./nodes/plum/configuration.nix).config.system.build.vm;
   iso = isoConfig.config.system.build.isoImage;
   install = installerEnv ./nodes/plum/configuration.nix;
