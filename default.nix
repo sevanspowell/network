@@ -59,7 +59,7 @@ rec {
   };
 
   # partition-disks && install-nixos
-  # $ qemu-kvm -drive file=./nixos.qcow2,if=virtio,werror=report -cpu max -m 1024 -net nic,netdev=user.0,model=virtio -netdev user,id=user.0,hostfwd=tcp::2221-:22,hostfwd=tcp::8080-:80
+  # $ qemu-kvm -drive file=./nixos.qcow2,if=virtio,werror=report -cpu max -m 1024 -net nic,netdev=user.0,model=virtio -netdev user,id=user.0,hostfwd=tcp::2221-:22,hostfwd=tcp::8080-:80 -soundhw all
   # $ ssh -X -oUserKnownHostsFile=/dev/null -oStrictHostKeyChecking=no sam@localhost -p 2221
   # <3
   installer-test-helper = pkgs.callPackage ./nixos/lib/vm-install-test.nix {

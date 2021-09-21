@@ -15,7 +15,10 @@ in
 
   home.packages = [
     pkgs.sqlite
+    pkgs.source-code-pro
   ];
+
+  fonts.fontconfig.enable = pkgs.lib.mkForce true;
 
   programs.emacs = {
     enable = true;
@@ -31,7 +34,4 @@ in
         emacs --batch --eval "(require 'org)" --eval '(org-babel-tangle-file "${./configuration.org}" (getenv "out"))'
       '';
 
-  fonts.fonts = with pkgs; [
-    source-code-pro
-  ];
 }
