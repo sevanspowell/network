@@ -76,6 +76,7 @@ let
         time.timeZone = "Australia/Perth";
         services.sshd.enable = true;
         services.openssh.enable = true;
+        services.openssh.forwardX11 = true;
         services.postgresql = {
           enable = true;
           enableTCPIP = false;

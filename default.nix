@@ -59,7 +59,8 @@ rec {
   };
 
   # partition-disks && install-nixos
-  # $ qemu-kvm -m 384 -netdev user,id=net0 -device virtio-net-pci,netdev=net0 $QEMU_OPTS -drive file=./nixos.qcow2,if=virtio,werror=report -cpu max -m 1024
+  # $ qemu-kvm -drive file=./nixos.qcow2,if=virtio,werror=report -cpu max -m 1024 -net nic,netdev=user.0,model=virtio -netdev user,id=user.0,hostfwd=tcp::2221-:22,hostfwd=tcp::8080-:80
+  # $ ssh -X -oUserKnownHostsFile=/dev/null -oStrictHostKeyChecking=no sam@localhost -p 2221
   # <3
   installer-test-helper = pkgs.callPackage ./nixos/lib/vm-install-test.nix {
     inherit system partitionDiskScript;
