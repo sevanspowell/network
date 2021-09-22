@@ -64,6 +64,7 @@ rec {
   # <3
   installer-test-helper = pkgs.callPackage ./nixos/lib/vm-install-test.nix {
     inherit system partitionDiskScript;
+    diskSize = 25 * 1024;
   };
 
   # Rebuild on system:
