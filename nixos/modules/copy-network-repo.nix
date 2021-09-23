@@ -1,7 +1,7 @@
 { pkgs, ... }:
 
 let
-  networkSrc = pkgs.lib.cleanSource ../..;
+  networkSrc = builtins.fetchGit ../..;
   srcPkg = pkgs.runCommand "copy-network-repo" {} ''
     mkdir $out
     cp -r ${networkSrc}/* $out
@@ -16,7 +16,7 @@ in
       script = ''
       if ! test -e "/root/network"; then
         mkdir /root/network
-        cp -r ${srcPkg}/* /root/network
+        cp -r ${networkSrc}/* /root/network
       fi
       '';
     };
