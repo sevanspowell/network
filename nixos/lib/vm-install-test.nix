@@ -15,7 +15,6 @@ let
       "${pkgs.callPackage ./vm-hardware-config.nix {
         inherit system diskSize partitionDiskScript;
       }}/hardware-configuration.nix"
-      ../modules/copy-network-repo.nix
       {
         users.mutableUsers = false;
         users.extraUsers.sam.initialPassword = "";
@@ -47,6 +46,7 @@ let
         (pkgs.writeShellScriptBin "partition-disks" partitionDiskScript)
         (pkgs.writeShellScriptBin "install-nixos" ''
           nixos-install --root /mnt --system ${installedConfig} --no-root-passwd
+          # chroot /mnt && ${config.nix.package.out}/bin/nix-store --load-db ${pkgs.closureInfo { rootPaths = [ installedConfig ]; }}/registration
         '')
       ];
       boot.postBootCommands = ''

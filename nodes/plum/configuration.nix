@@ -6,8 +6,15 @@ in
 {
   imports = [
     "${sources.home-manager}/nixos"
-    ../../nixos/modules/yubikey-gpg
-    ../../nixos/modules/direnv
+    ../../nixos/modules/copy-network-repo.nix
+    # ../../nixos/modules/yubikey-gpg
+    # ../../nixos/modules/direnv
+  ];
+
+  nix.nixPath = [
+    "nixpkgs=/nix/var/nix/profiles/per-user/root/channels/nixos"
+    "/nix/var/nix/profiles/per-user/root/channels"
+    "nixos-config=/network/nodes/plum"
   ];
 
   home-manager.users.sam = {...}: {
@@ -19,9 +26,9 @@ in
     ];
   };
 
-  hardware.yubikey-gpg.enable = true;
+  # hardware.yubikey-gpg.enable = true;
 
-  services.trezord.enable = true;
+  # services.trezord.enable = true;
 
   networking.hostName = "plum";
 
@@ -76,7 +83,6 @@ in
     layout = "us";
     desktopManager.xterm.enable = false;
     xkbOptions="ctrl:nocaps";
-    # videoDrivers = ["nvidia"];
 
     displayManager.defaultSession = "none+xmonad";
 
@@ -84,7 +90,6 @@ in
       enable = true;
       enableContribAndExtras = true;
     };
-    #windowManager.windowmaker.enable = true;
   };
 
   users.extraUsers.sam = {

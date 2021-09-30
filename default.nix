@@ -68,7 +68,24 @@ rec {
   };
 
   # Rebuild on system:
-  # pathToConfig=$(nix-build --no-out-link -A $node.system)
+  # pathToConfig=$(nix-build --no-out-link -A nodes.plum.config.system.build.toplevel)
   # nix-env -p /nix/var/nix/profiles/system --set $pathToConfig
   # $pathToConfig/bin/switch-to-configuration switch
+
+  nodes = {
+    plum = (import "${nixpkgs}/nixos/lib/eval-config.nix" {
+      inherit system;
+      modules = [
+        ./nodes/plum/configuration.nix
+        ./nixos/modules/qemu-vm-base.nix
+        "${pkgs.callPackage ./nixos/lib/vm-hardware-config.nix {
+          diskSize = 25 * 1024;
+          inherit system partitionDiskScript;
+        }}/hardware-configuration.nix"
+        {
+          boot.loader.grub.device = "/dev/vda";
+        }
+      ];
+    });
+  };
 }
