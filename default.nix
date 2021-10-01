@@ -72,20 +72,31 @@ rec {
   # nix-env -p /nix/var/nix/profiles/system --set $pathToConfig
   # $pathToConfig/bin/switch-to-configuration switch
 
+  # Yubikey passthru:
+  # Bus 001 Device 008: ID 1050:0407 Yubico.com Yubikey 4/5 OTP+U2F+CCID
+  # QEMU_OPTS="-usb -device usb-host,hostbus=1,hostaddr=3"
+
   nodes = {
-    plum = (import "${nixpkgs}/nixos/lib/eval-config.nix" {
-      inherit system;
-      modules = [
-        ./nodes/plum/configuration.nix
-        ./nixos/modules/qemu-vm-base.nix
-        "${pkgs.callPackage ./nixos/lib/vm-hardware-config.nix {
-          diskSize = 25 * 1024;
-          inherit system partitionDiskScript;
-        }}/hardware-configuration.nix"
-        {
-          boot.loader.grub.device = "/dev/vda";
-        }
-      ];
+    plum = (import "${nixpkgs}/nixos" {
+      configuration = { modulesPath, ... }: {
+        imports = [
+          "${modulesPath}/installer/cd-dvd/channel.nix"
+          ./nodes/plum/configuration.nix
+          # ./nixos/modules/qemu-vm-base.nix
+          "${pkgs.callPackage ./nixos/lib/vm-hardware-config.nix {
+            diskSize = 25 * 1024;
+            inherit system partitionDiskScript;
+          }}/hardware-configuration.nix"
+          {
+            boot.loader.grub.device = "/dev/vda";
+          }
+          {
+            users.mutableUsers = false;
+            users.extraUsers.sam.initialPassword = "";
+            users.extraUsers.root.initialPassword = "";
+          }
+        ];
+      };
     });
   };
 }

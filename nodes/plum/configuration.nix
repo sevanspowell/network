@@ -7,14 +7,14 @@ in
   imports = [
     "${sources.home-manager}/nixos"
     ../../nixos/modules/copy-network-repo.nix
-    # ../../nixos/modules/yubikey-gpg
+    ../../nixos/modules/yubikey-gpg
     # ../../nixos/modules/direnv
   ];
 
   nix.nixPath = [
     "nixpkgs=/nix/var/nix/profiles/per-user/root/channels/nixos"
     "/nix/var/nix/profiles/per-user/root/channels"
-    "nixos-config=/network/nodes/plum"
+    "nixos-config=/srv/network/nodes/plum"
   ];
 
   home-manager.users.sam = {...}: {
@@ -23,10 +23,18 @@ in
       ../../nixos/modules/home/xmobar
       ../../nixos/modules/home/xmonad
       ../../nixos/modules/home/xresources
+      ../../nixos/modules/home/git
     ];
   };
 
-  # hardware.yubikey-gpg.enable = true;
+  hardware.yubikey-gpg = {
+    enable = true;
+
+    users = {
+      sam.pinentryFlavor = "gtk2";
+      root.pinentryFlavor = "curses";
+    };
+  };
 
   # services.trezord.enable = true;
 
@@ -50,6 +58,7 @@ in
     git
     rxvt_unicode-with-plugins
     silver-searcher
+    usbutils
     tree
     unzip
     wget
