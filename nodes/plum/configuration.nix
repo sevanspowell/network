@@ -1,20 +1,22 @@
-{ config, pkgs, lib, ... }:
+{ modulesPath, config, pkgs, lib, ... }:
 
 let
   sources = import ../../nix/sources.nix;
 in
 {
   imports = [
+    # "${modulesPath}/installer/cd-dvd/installation-cd-minimal.nix"
+    "${modulesPath}/installer/cd-dvd/channel.nix"
     "${sources.home-manager}/nixos"
     ../../nixos/modules/copy-network-repo.nix
     ../../nixos/modules/yubikey-gpg
-    # ../../nixos/modules/direnv
+    ../../nixos/modules/direnv
   ];
 
   nix.nixPath = [
     "nixpkgs=/nix/var/nix/profiles/per-user/root/channels/nixos"
     "/nix/var/nix/profiles/per-user/root/channels"
-    "nixos-config=/srv/network/nodes/plum"
+    "nixos-config=/srv/network/nodes/${config.networking.hostName}"
   ];
 
   home-manager.users.sam = {...}: {

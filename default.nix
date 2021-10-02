@@ -75,26 +75,101 @@ rec {
   # Yubikey passthru:
   # Bus 001 Device 008: ID 1050:0407 Yubico.com Yubikey 4/5 OTP+U2F+CCID
   # QEMU_OPTS="-usb -device usb-host,hostbus=1,hostaddr=3"
-
+  # QEMU_OPTS=$(lsusb | grep Yubikey | awk '{print "-usb -device usb-host,hostbus="$2",hostaddr="$4}' | sed 's/:$//')
   nodes = {
-    plum = (import "${nixpkgs}/nixos" {
-      configuration = { modulesPath, ... }: {
+    orchid = (import "${nixpkgs}/nixos" {
+      configuration = { ... }: {
         imports = [
-          "${modulesPath}/installer/cd-dvd/channel.nix"
-          ./nodes/plum/configuration.nix
-          # ./nixos/modules/qemu-vm-base.nix
-          "${pkgs.callPackage ./nixos/lib/vm-hardware-config.nix {
-            diskSize = 25 * 1024;
-            inherit system partitionDiskScript;
-          }}/hardware-configuration.nix"
-          {
-            boot.loader.grub.device = "/dev/vda";
-          }
+          ./nodes/orchid/default.nix
           {
             users.mutableUsers = false;
             users.extraUsers.sam.initialPassword = "";
             users.extraUsers.root.initialPassword = "";
           }
+        ];
+      };
+    });
+
+    plum = (import ./nixos {
+      inherit pkgs;
+      configuration = { modulesPath, config, ... }: {
+        imports = [
+          ./nodes/plum/default.nix
+          # ./nixos/modules/closure.nix
+          # ./nixos/modules/qemu-vm-base.nix
+          {
+            users.mutableUsers = false;
+            users.extraUsers.sam.initialPassword = "";
+            users.extraUsers.root.initialPassword = "";
+          }
+          (
+            { config, ...}:
+                {
+                  # system.build.tarball = pkgs.callPackage "${nixpkgs}/nixos/lib/make-system-tarball.nix" {
+                  #   storeContents = [
+                  #      {
+                  #        object = config.system.build.toplevel;
+                  #        symlink = "none";
+                  #      }
+                  #   ];
+                  #   contents = [];
+                  #   compressCommand = "cat";
+                  #   compressionExtension = "";
+                  # };
+
+                  # system.extraSystemBuilderCmds =
+                  #   ''
+                  #     echo " regInfo=$out" >> $out/kernel-params
+                  #   '';
+                  # boot.postBootCommands = ''
+                  #   nix-store --load-db << ./
+                  # '';
+              }
+          )
+          {
+            boot.postBootCommands = pkgs.lib.mkAfter ''
+              nix-channel --update
+            '';
+          }
+          # only in vm with useBootLoader = true
+          # {
+          #   system.build.tarball = pkgs.callPackage "${nixpkgs}/nixos/lib/make-system-tarball.nix" {
+          #     storeContents = [
+          #       {
+          #         symlink = "/bin/init";
+          #         object = "${config.system.build.toplevel}/init";
+          #       }
+          #     ];
+          #     contents = [];
+          #     compressCommand = "cat";
+          #     compressionExtension = "";
+          #   };
+
+          #   # Install new init script; this ensures that /init is updated after every
+          #   # `nixos-rebuild` run on the machine (the kernel can run init from a
+          #   # symlink).
+          #   system.activationScripts.installInitScript = ''
+          #     ln -fs $systemConfig/init /bin/init
+          #   '';
+
+          #   boot.postBootCommands =
+          #     # Import Nix DB, so that nix commands work and know what's installed.
+          #     # The `rm` ensures it's done only once; `/nix-path-registration`
+          #     # is a file created in the tarball by `make-system-tarball.nix`.
+          #     ''
+          #     echo "REACHED"
+          #     if [ -f /nix-path-registration ]; then
+          #       echo "${config.system.build.tarball}"
+          #       ${config.nix.package.out}/bin/nix-store --load-db --option build-use-substitutes false < /nix-path-registration && rm /nix-path-registration
+          #     fi
+          #     ''
+          #     +
+          #     # Create the system profile to make nixos-rebuild happy
+          #     ''
+          #       ${config.nix.package.out}/bin/nix-env -p /nix/var/nix/profiles/system --set /run/current-system
+          #     '';
+          # }
+
         ];
       };
     });
