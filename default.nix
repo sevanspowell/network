@@ -102,35 +102,6 @@ rec {
             users.extraUsers.sam.initialPassword = "";
             users.extraUsers.root.initialPassword = "";
           }
-          (
-            { config, ...}:
-                {
-                  # system.build.tarball = pkgs.callPackage "${nixpkgs}/nixos/lib/make-system-tarball.nix" {
-                  #   storeContents = [
-                  #      {
-                  #        object = config.system.build.toplevel;
-                  #        symlink = "none";
-                  #      }
-                  #   ];
-                  #   contents = [];
-                  #   compressCommand = "cat";
-                  #   compressionExtension = "";
-                  # };
-
-                  # system.extraSystemBuilderCmds =
-                  #   ''
-                  #     echo " regInfo=$out" >> $out/kernel-params
-                  #   '';
-                  # boot.postBootCommands = ''
-                  #   nix-store --load-db << ./
-                  # '';
-              }
-          )
-          {
-            boot.postBootCommands = pkgs.lib.mkAfter ''
-              nix-channel --update
-            '';
-          }
           # only in vm with useBootLoader = true
           # {
           #   system.build.tarball = pkgs.callPackage "${nixpkgs}/nixos/lib/make-system-tarball.nix" {
