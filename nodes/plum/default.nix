@@ -7,5 +7,9 @@
     {
       boot.loader.grub.device = "/dev/vda";
     }
+    # In vmWithBootLoader
+    # {
+    #   boot.loader.grub.device = "/dev/vdb";
+    # }
   ];
 }
