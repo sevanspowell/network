@@ -325,9 +325,6 @@ Bootstrap
     :config
     (setq transient-default-level 5)
     )
-  (use-package forge
-    :ensure t
-    :after magit)
   (use-package ace-window
     :ensure t
     :init
