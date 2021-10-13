@@ -437,8 +437,8 @@ Bootstrap
     "fs"  'save-buffer
     "fed" '((lambda () (interactive) (find-file "~/code/devops/personal-network/deployments/personal/home/emacs/configuration.org")) :which-key "open-emacs-config")
     "fer" '((lambda () (interactive) (load-file "~/.emacs.d/init.el")) :which-key "reload-emacs-config")
-    "fen" '((lambda () (interactive) (find-file "/sudo:root@localhost:/etc/nixos/configuration.nix")) :which-key "open-nix-config")
-    "nr" '((lambda () (interactive) (let ((default-directory "/sudo::")) (async-shell-command "NIXOS_CONFIG=/home/sam/code/devops/personal-network/deployments/personal/orchid/configuration.nix nixos-rebuild switch --keep-failed" "*nixos-rebuild*"))) :which-key "reload-nix-config")
+    "fen" '((lambda () (interactive) (find-file (replace-regexp-in-string "\n\\'" "" (shell-command-to-string "nix-instantiate --find-file nixos-config")))) :which-key "open-nix-config")
+    "nr" '((lambda () (interactive) (let ((default-directory "/sudo::")) (async-shell-command "nixos-rebuild switch --keep-failed" "*nixos-rebuild*"))) :which-key "reload-nix-config")
     "fo"  '(:ignore t :which-key "organization")
     "foi" '((lambda () (interactive) (find-file "~/org/inbox.org")) :which-key "open-org-inbox")
     "fot" '((lambda () (interactive) (find-file "~/org/timesheets/tiny.org")) :which-key "open-org-timesheet")

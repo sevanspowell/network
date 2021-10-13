@@ -16,7 +16,7 @@ in
   nix.nixPath = [
     "nixpkgs=/nix/var/nix/profiles/per-user/root/channels/nixos"
     "/nix/var/nix/profiles/per-user/root/channels"
-    "nixos-config=/srv/network/nodes/${config.networking.hostName}"
+    "nixos-config=/srv/network/nodes/${config.networking.hostName}/default.nix"
   ];
 
   home-manager.users.sam = {...}: {
