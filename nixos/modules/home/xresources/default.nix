@@ -2,6 +2,15 @@
 { config, pkgs, ... }:
 
 {
+  xsession = {
+    enable = true;
+
+    windowManager.xmonad = {
+      enable = true;
+      enableContribAndExtras = true;
+    };
+  };
+
   xresources.properties = {
     # X config
     "Xcursor.size" = 2;

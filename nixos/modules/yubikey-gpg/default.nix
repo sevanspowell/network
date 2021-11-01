@@ -24,6 +24,8 @@ with lib;
 let
   cfg = config.hardware.yubikey-gpg;
 
+  yubikey-touch-detector = pkgs.callPackage ../../../nix/pkgs/yubikey-touch-detector {};
+
   userSpecificOpts = { config, ... }:
     {
       options = {
@@ -116,6 +118,7 @@ in
       yubikey-manager
       ccid
       importYubikey
+      yubikey-touch-detector
     ];
 
     services.dbus.enable = true;
@@ -149,6 +152,40 @@ in
         gpgconf --launch gpg-agent
       '';
 
+      # systemd.user.sockets.yubikey-touch-detector = {
+      #   Unit = { Description = "Unix socket activation for Yubikey touch detector service"; };
+
+      #   Socket = {
+      #     ListenStream = "%t/yubikey-touch-detector.socket";
+      #     RemoveOnStop = "yes";
+      #   };
+
+      #   Install = { WantedBy = [ "sockets.target" ]; };
+      # };
+
+
+      # systemd.user.services.yubikey-touch-detector = {
+      #   Unit = {
+      #     Description = "Detects when your YubiKey is waiting for a touch";
+      #     Requires = [ "yubikey-touch-detector.socket" ];
+      #   };
+
+      #   Service = {
+      #     ExecStart = "${yubikey-touch-detector}/bin/yubikey-touch-detector --libnotify";
+      #     Environment =
+      #       let
+      #         path = with pkgs;
+      #           makeSearchPath "bin" [ gnupg ];
+      #       in
+      #         [ "PATH=${path}" ];
+      #   };
+
+      #   Install = {
+      #     Also = [ "yubikey-touch-detector.socket" ];
+      #     WantedBy = [ "default.target" ];
+      #   };
+      # };
     }) cfg.users;
+
   };
 }

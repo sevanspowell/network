@@ -16,6 +16,7 @@ in
   home.packages = [
     pkgs.sqlite
     pkgs.source-code-pro
+    pkgs.mu
   ];
 
   fonts.fontconfig.enable = pkgs.lib.mkForce true;

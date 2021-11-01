@@ -1,0 +1,24 @@
+[general]
+accounts = Gmail
+maxsyncaccounts = 3
+# Path to file with arbitrary Python code to be loaded
+pythonfile = ~/.offlineimap.py
+
+[Account Gmail]
+localrepository = Local
+remoterepository = Remote
+postsynchook = mu index
+
+[Repository Local]
+type = Maildir
+localfolders = ~/Maildir
+
+[Repository Remote]
+type = IMAP
+remotehost = imap.gmail.com
+remoteuser = samuel.evans-powell@iohk.io
+# Decrypt and read the encrypted password
+remotepasseval = get_pass("google.com/samuel.evans-powell@iohk.io/offlineimap")
+ssl = yes
+maxconnections = 1
+sslcacertfile = /etc/ssl/certs/ca-certificates.crt

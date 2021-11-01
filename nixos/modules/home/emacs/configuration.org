@@ -535,6 +535,19 @@ Intelligently trim whitespace:
 (setq-default show-trailing-whitespace t)
 #+END_SRC
 
+Link to JIRA tickets:
+#+BEGIN_SRC emacs-lisp
+(use-package bug-reference
+  :custom (bug-reference-bug-regexp (rx "ADP-"
+                                        (group (+ digit))))
+  :config (defun my-jira-url () ""
+                 (format "https://input-output.atlassian.net/browse/ADP-%s"
+                         (match-string-no-properties 1)))
+          (setq bug-reference-url-format #'my-jira-url)
+  :hook (org-mode . bug-reference-mode)
+        (prog-mode . bug-reference-prog-mode))
+#+END_SRC
+
 *** Backups
 #+BEGIN_SRC emacs-lisp
   ; Use version control
@@ -967,6 +980,34 @@ vterm:
   (setq alert-default-style 'notifications))
 #+END_SRC
 
+** Email
+#+BEGIN_SRC emacs-lisp
+  (require 'smtpmail)
+  (require 'mu4e)
+  (setq mu4e-contexts
+        `( ,(make-mu4e-context
+             :name "work"
+             :enter-func (lambda () (mu4e-message "Entering work context"))
+             :leave-func (lambda () (mu4e-message "Leaving work context"))
+             ;; :match-func (lambda (msg) t) 
+             :vars '( ( user-mail-address . "samuel.evans-powell@iohk.io" )
+                      ( user-full-name . "Samuel Evans-Powell" )
+                      ( mu4e-drafts-folder . "/[Gmail].Drafts" )
+                      ( mu4e-sent-folder . "/[Gmail].Sent Mail" )
+                      ( mu4e-trash-folder . "/[Gmail].Trash" )
+                      (setq mu4e-sent-messages-behavior 'delete)
+                      (setq message-send-mail-function 'smtpmail-send-it
+                            starttls-use-gnutls t
+                            smtpmail-starttls-credentials '(("smtp.gmail.com" 587 nil nil))
+                            smtpmail-auth-credentials '(("smtp.gmail.com" 587 "samuel.evans-powell@gmail.com" nil))
+                            smtpmail-default-smtp-server "smtp.gmail.com"
+                            smtpmail-smtp-server "smtp.gmail.com"
+                            smtpmail-smtp-service 587)))))
+
+  (setq mail-user-agent 'mu4e-user-agent)
+  (setq mu4e-get-mail-command "offlineimap")
+  (setq message-kill-buffer-on-exit t)
+#+END_SRC
 
 ** Contact
 

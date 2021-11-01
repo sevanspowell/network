@@ -48,3 +48,4 @@ myConfig = def
 --     }
 
 -- myDynHook = composeOne [ title =? "*scratch*" -?> doRectFloat (W.RationalRect 0.25 0.25 0.5 0.5) ]
+-- Some event
