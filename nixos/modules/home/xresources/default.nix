@@ -11,6 +11,8 @@
     };
   };
 
+  services.xscreensaver.enable = true;
+
   xresources.properties = {
     # X config
     "Xcursor.size" = 2;
