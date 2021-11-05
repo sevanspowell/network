@@ -1023,7 +1023,16 @@ vterm:
     (setf use-default-font-for-symbols nil)
     (set-fontset-font t 'unicode "Noto Color Emoji" nil 'append)
     (set-fontset-font t 'symbol "Noto Color Emoji" nil 'append)
+  
+    (defun ement-notify--event-not-session-user-p (event room session)
+      "Return non-nil if EVENT in ROOM mentions SESSION's user.
+    If EVENT's sender is SESSION's user, returns nil."
+      (pcase-let* (((cl-struct ement-session user) session)
+                   ((cl-struct ement-event sender) event))
+        (unless (equal (ement-user-id user) (ement-user-id sender))
+          (ement-notify--notifications-notify event room session))))
 
+    (setq ement-notify-functions '(ement-notify--notify-if-mention ement-notify--log-if-mention ement-notify--log-if-buffer ement-notify--event-not-session-user-p))
     :hook
     (ement-room-mode . fringe-mode)
     (ement-room-mode . (lambda () (setq-local show-trailing-whitespace nil)))
