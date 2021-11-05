@@ -15,8 +15,14 @@ in
     ../../nixos/modules/copy-network-repo.nix
     ../../nixos/modules/direnv
     ../../nixos/modules/yubikey-gpg
+    ../../nixos/modules/weechat
   ];
 
+  nix.nixPath = [
+    "nixpkgs=/nix/var/nix/profiles/per-user/root/channels/nixos"
+    "/nix/var/nix/profiles/per-user/root/channels"
+    "nixos-config=/srv/network/nodes/${config.networking.hostName}/default.nix"
+  ];
 
   home-manager.users.sam = {...}: {
     imports = [
@@ -24,17 +30,12 @@ in
       ../../nixos/modules/home/xmobar
       ../../nixos/modules/home/xmonad
       ../../nixos/modules/home/xresources
+      ../../nixos/modules/home/dunst
       ../../nixos/modules/home/git
+      ../../nixos/modules/home/chat
+      ../../nixos/modules/home/offlineimap
     ];
   };
-
-  services.offlineimap.enable = true;
-
-  nix.nixPath = [
-    "nixpkgs=/nix/var/nix/profiles/per-user/root/channels/nixos"
-    "/nix/var/nix/profiles/per-user/root/channels"
-    "nixos-config=/srv/network/nodes/${config.networking.hostName}"
-  ];
 
   hardware.yubikey-gpg = {
     enable = true;
@@ -106,7 +107,6 @@ in
     vim
     wally-cli
     wget
-    weechat
     (wine.override { mingwSupport = true; wineBuild = "wine64"; })
     wireguard
     xscreensaver
@@ -125,6 +125,7 @@ in
     hasklig
     meslo-lg
     source-code-pro
+    noto-fonts-emoji
   ];
 
   environment.interactiveShellInit = ''
@@ -210,17 +211,17 @@ in
   # Enable the X11 windowing system.
   services.xserver = {
     enable = true;
-    layout = "us";
-    desktopManager.xterm.enable = false;
+    # layout = "us";
+    # desktopManager.xterm.enable = false;
     xkbOptions="ctrl:nocaps";
     videoDrivers = ["nvidia"];
 
-    displayManager.defaultSession = "none+xmonad";
+    # displayManager.defaultSession = "none+xmonad";
 
-    windowManager.xmonad = {
-      enable = true;
-      enableContribAndExtras = true;
-    };
+    # windowManager.xmonad = {
+    #   enable = true;
+    #   enableContribAndExtras = true;
+    # };
   };
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
@@ -258,6 +259,7 @@ in
   # # should.
   system.stateVersion = "18.09"; # Did you read the comment?
 
+  services.vnstat.enable = true;
   # networking.wireguard.interfaces = {
   #   wg0 = {
   #     ips = [ "10.0.0.1/24" ];

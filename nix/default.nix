@@ -7,7 +7,9 @@ let
 
   # for inclusion in pkgs:
   overlays = [
-    (pkgs: _: { inherit sources; })
+    (pkgs: _: {
+      inherit sources;
+    })
   ];
 
   pkgs = import nixpkgs {

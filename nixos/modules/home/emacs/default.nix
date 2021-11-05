@@ -3,6 +3,7 @@
 let
   emacsOverlay = import (builtins.fetchTarball {url = https://github.com/nix-community/emacs-overlay/archive/master.tar.gz;});
   emacsLocal = pkgs.emacsWithPackagesFromUsePackage {
+    package = pkgs.emacs28;
     config = ./configuration.org;
     extraEmacsPackages = epkgs: [ epkgs.vterm epkgs.emacsql-sqlite ];
     alwaysEnsure = true;
@@ -11,7 +12,10 @@ let
 in
 
 {
-  nixpkgs.overlays = [ emacsOverlay ];
+  nixpkgs.overlays = [
+    emacsOverlay
+    (import ./emacs.nix)
+  ];
 
   home.packages = [
     pkgs.sqlite

@@ -26,6 +26,7 @@ in
       ../../nixos/modules/home/xmonad
       ../../nixos/modules/home/xresources
       ../../nixos/modules/home/git
+      ../../nixos/modules/home/chat
     ];
   };
 

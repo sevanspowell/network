@@ -432,9 +432,9 @@ Bootstrap
 
     "f"   '(:ignore t :which-key "files")
     "fs"  'save-buffer
-    "fed" '((lambda () (interactive) (find-file "~/code/devops/personal-network/deployments/personal/home/emacs/configuration.org")) :which-key "open-emacs-config")
+    "fed" '((lambda () (interactive) (find-file "/srv/network/nixos/modules/home/emacs/configuration.org")) :which-key "open-emacs-config")
     "fer" '((lambda () (interactive) (load-file "~/.emacs.d/init.el")) :which-key "reload-emacs-config")
-    "fen" '((lambda () (interactive) (find-file (replace-regexp-in-string "\n\\'" "" (shell-command-to-string "nix-instantiate --find-file nixos-config")))) :which-key "open-nix-config")
+    "fen" '((lambda () (interactive) (find-file (replace-regexp-in-string "\n\\'" "" (shell-command-to-string "nix-instantiate --find-file nixos-config nix-instantiate --find-file nixos-config 2> /dev/null")))) :which-key "open-nix-config")
     "nr" '((lambda () (interactive) (let ((default-directory "/sudo::")) (async-shell-command "nixos-rebuild switch --keep-failed" "*nixos-rebuild*"))) :which-key "reload-nix-config")
     "fo"  '(:ignore t :which-key "organization")
     "foi" '((lambda () (interactive) (find-file "~/org/inbox.org")) :which-key "open-org-inbox")
@@ -1007,6 +1007,27 @@ vterm:
   (setq mail-user-agent 'mu4e-user-agent)
   (setq mu4e-get-mail-command "offlineimap")
   (setq message-kill-buffer-on-exit t)
+#+END_SRC
+
+** Chat
+
+#+BEGIN_SRC emacs-lisp
+  ;; Install `plz' HTTP library (not on MELPA yet).
+  (use-package plz
+    :quelpa (plz :fetcher github :repo "alphapapa/plz.el"))
+  
+  ;; Install Ement.
+  (use-package ement
+    :quelpa (ement :fetcher github :repo "alphapapa/ement.el")
+    :config
+    (setf use-default-font-for-symbols nil)
+    (set-fontset-font t 'unicode "Noto Color Emoji" nil 'append)
+    (set-fontset-font t 'symbol "Noto Color Emoji" nil 'append)
+
+    :hook
+    (ement-room-mode . fringe-mode)
+    (ement-room-mode . (lambda () (setq-local show-trailing-whitespace nil)))
+    )
 #+END_SRC
 
 ** Contact

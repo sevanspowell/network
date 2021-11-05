@@ -41,11 +41,12 @@
               ]))
             ];
             scripts = [
-              # wee-slack          # A WeeChat plugin for Slack.com
+              wee-slack            # A WeeChat plugin for Slack.com
               weechat-autosort     # Automatically or manually keep your buffers sorted
               weechat-matrix'      # Weechat communication over the Matrix protocol
               weechat-otr          # WeeChat script for Off-the-Record messaging
               weechat-notify-send' # Weechat script for notifications
+              multiline
             ];
           };
     })

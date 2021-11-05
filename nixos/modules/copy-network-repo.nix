@@ -34,7 +34,7 @@ in
         ${pkgs.findutils}/bin/find $tmp -type d -exec chmod ug+rwx {} ";"
 
         mkdir -p /srv/
-        mv $tmp /srv/network
+        mv $tmp/* /srv/network
 
         touch /var/lib/nixos/did-network-repo-copy
       fi

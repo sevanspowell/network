@@ -20,4 +20,6 @@ with pkgs;
 in {
   installer = callTest ./installer.nix {};
   boot = callTest ./boot.nix {};
+  wireguard = callTest ./wireguard.nix {};
+  chat = callTest ./chat.nix {};
 }

@@ -97,6 +97,11 @@ rec {
           ./nodes/plum/default.nix
           # ./nixos/modules/closure.nix
           # ./nixos/modules/qemu-vm-base.nix
+          # {
+          #   environment.systemPackages = [
+          #     (pkgs.writeShellScriptBin "partition-disks" partitionDiskScript)
+          #   ];
+          # }
           {
             users.mutableUsers = false;
             users.extraUsers.sam.initialPassword = "";
