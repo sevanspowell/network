@@ -325,6 +325,18 @@ Bootstrap
     :config
     (setq transient-default-level 5)
     )
+  (use-package browse-at-remote
+    :ensure t
+    :config
+      (general-define-key
+        :states '(normal visual insert emacs)
+        :prefix "SPC"
+        :non-normal-prefix "C-SPC"
+
+        "gg"  'browse-at-remote
+        "gy"  'browse-at-remote-kill
+      )
+  )
   (use-package ace-window
     :ensure t
     :init

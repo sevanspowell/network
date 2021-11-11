@@ -1,7 +1,8 @@
 { config, pkgs, ... }:
 
 let
-  emacsOverlay = import (builtins.fetchTarball {url = https://github.com/nix-community/emacs-overlay/archive/master.tar.gz;});
+  # emacsOverlay = import (builtins.fetchTarball {url = https://github.com/nix-community/emacs-overlay/archive/master.tar.gz;});
+  emacsOverlay = import (builtins.fetchTarball {url = https://github.com/nix-community/emacs-overlay/archive/a415b88228a42eba5847b2fc96933cf36c70ac8b.tar.gz;});
   emacsLocal = pkgs.emacsWithPackagesFromUsePackage {
     package = pkgs.emacs28;
     config = ./configuration.org;
