@@ -612,7 +612,10 @@ Link to JIRA tickets:
 #+BEGIN_SRC emacs-lisp
   (use-package org
     :mode ("\\.org\\'" . org-mode)
-    :config (define-key org-mode-map (kbd "C-c C-r") verb-command-map))
+    :config (define-key org-mode-map (kbd "C-c C-r") verb-command-map)
+    :hook
+        (org-mode . visual-line-mode)
+    )
 #+END_SRC
 
 Activate org-mode src code highlighting:
@@ -1035,7 +1038,19 @@ vterm:
     (setf use-default-font-for-symbols nil)
     (set-fontset-font t 'unicode "Noto Color Emoji" nil 'append)
     (set-fontset-font t 'symbol "Noto Color Emoji" nil 'append)
-  
+
+    (general-define-key
+      :states '(normal visual insert emacs)
+      :prefix ","
+      :keymaps 'ement-room-mode-map
+
+      "rr"  'ement-room-retro
+      "rs"  'ement-room-sync
+      "rc"  'ement-room-compose-message
+      "rm"  'ement-room-send-message
+      "rl"  'ement-room-list
+    )
+
     (defun ement-notify--event-not-session-user-p (event room session)
       "Return non-nil if EVENT in ROOM mentions SESSION's user.
     If EVENT's sender is SESSION's user, returns nil."
