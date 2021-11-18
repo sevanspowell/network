@@ -324,6 +324,8 @@ Bootstrap
     :ensure t
     :config
     (setq transient-default-level 5)
+    :hook
+    (git-commit-mode . auto-fill-mode)
     )
   (use-package browse-at-remote
     :ensure t
@@ -612,7 +614,9 @@ Link to JIRA tickets:
 #+BEGIN_SRC emacs-lisp
   (use-package org
     :mode ("\\.org\\'" . org-mode)
-    :config (define-key org-mode-map (kbd "C-c C-r") verb-command-map)
+    :config
+    (define-key org-mode-map (kbd "C-c C-r") verb-command-map)
+    (setq org-src-preserve-indentation t)
     :hook
         (org-mode . visual-line-mode)
     )
@@ -1051,6 +1055,14 @@ vterm:
       "rl"  'ement-room-list
     )
 
+    (general-define-key
+      :states '(normal visual insert emacs)
+      :prefix "SPC"
+      :non-normal-prefix "C-SPC"
+
+      "ec"  '((lambda () (interactive) (adrestia-connect)) :which-key "adrestia-chat")
+      )
+
     (defun ement-notify--event-not-session-user-p (event room session)
       "Return non-nil if EVENT in ROOM mentions SESSION's user.
     If EVENT's sender is SESSION's user, returns nil."
@@ -1060,10 +1072,29 @@ vterm:
           (ement-notify--notifications-notify event room session))))
 
     (setq ement-notify-functions '(ement-notify--notify-if-mention ement-notify--log-if-mention ement-notify--log-if-buffer ement-notify--event-not-session-user-p))
+
+    (defun adrestia-connect ()
+      (let* ((found (nth 0 (auth-source-search :host "localhost" :port "8008" :user "@sevanspowell:adrestia.iohkdev.io" :require '(:user :secret)))))
+        (if found
+            (let ((secret (plist-get found :secret))
+                  (user (plist-get found :user)))
+              (let ((secretpw (if (functionp secret) (funcall secret) secret)))
+                (ement-connect :uri-prefix "http://localhost:8008" :user-id user :password secretpw)))
+          nil
+          )))
     :hook
-    (ement-room-mode . fringe-mode)
+    (ement-room-mode . (lambda () (set-window-fringes (selected-window) 0 0 nil)))
     (ement-room-mode . (lambda () (setq-local show-trailing-whitespace nil)))
     )
+#+END_SRC
+
+** Encryption
+
+By default epa-file tries to use password-based encryption. I always want to use my Yubikey, so set ~epa-file-select-keys~ to true. It will then always ask for the recipients for encryption.
+
+#+BEGIN_SRC emacs-lisp
+(setq epa-file-select-keys t)
+(setq auth-sources '(password-store "~/.authinfo.gpg"))
 #+END_SRC
 
 ** Contact

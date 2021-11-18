@@ -18,6 +18,7 @@ in {
         type = types.package;
         default = pkgs.python3Packages.callPackage ./pantalaimon-pkg.nix {
           prompt-toolkit = pkgs.python3Packages.callPackage ./prompt-toolkit.nix { };
+          sagecipher = pkgs.python3Packages.callPackage ./pkg/keyrings-sagecipher.nix {};
         };
         defaultText = literalExpression "pkgs.pantalaimon";
         description =

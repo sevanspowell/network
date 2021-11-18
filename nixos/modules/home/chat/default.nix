@@ -7,6 +7,10 @@
     ./pantalaimon.nix
   ];
 
+  home.packages = [
+    (pkgs.python3Packages.callPackage ./pkg/keyrings-sagecipher.nix {})
+  ];
+
   services.pantalaimon = {
     enable = true;
     settings = {
@@ -26,4 +30,6 @@
         };
       };
   };
+
+  systemd.user.services.pantalaimon.Service.Environment = "PYTHON_KEYRING_BACKEND=sagecipher.keyring.Keyring";
 }

@@ -1,7 +1,7 @@
 { lib, stdenv, buildPythonApplication, fetchFromGitHub, pythonOlder,
   attrs, aiohttp, appdirs, click, keyring, Logbook, peewee, janus,
   prompt-toolkit, matrix-nio, dbus-python, pydbus, notify2, pygobject3,
-  setuptools, installShellFiles,
+  setuptools, installShellFiles, sagecipher,
 
   pytest, faker, pytest-aiohttp, aioresponses,
 
@@ -34,6 +34,7 @@ buildPythonApplication rec {
     peewee
     prompt-toolkit
     setuptools
+    sagecipher
   ] ++ lib.optional enableDbusUi [
       dbus-python
       notify2
