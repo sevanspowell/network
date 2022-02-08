@@ -6,6 +6,10 @@
 
 let
   sources = import ../../nix/sources.nix;
+
+  cardano-cli = (import sources.cardano-node {}).cardano-cli;
+
+  linode-cli = (import ../../nix {}).linode-cli;
 in
 
 {
@@ -16,6 +20,8 @@ in
     ../../nixos/modules/direnv
     ../../nixos/modules/yubikey-gpg
     ../../nixos/modules/weechat
+    "${sources.cardano-node}/nix/nixos"
+    "${sources.cardano-db-sync}/nix/nixos"
   ];
 
   nix.nixPath = [
@@ -70,7 +76,7 @@ in
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = (with pkgs; [
-    # cardano-cli
+    cardano-cli
     cabal-install
     cabal2nix
     chromium
@@ -83,6 +89,7 @@ in
     ghc
     go-jira
     git
+    linode-cli
     gnumake
     ledger
     libreoffice
@@ -133,7 +140,7 @@ in
     alias dropbox-start="docker run -d --restart=always --name=dropbox \
       -v /home/sam/Dropbox:/dbox/Dropbox \
       -v /home/sam/.dropbox:/dbox/.dropbox \
-      -e DBOX_UID=1000 -e DBOX_GID=100 janeczku/dropbox"
+      -e DBO_UID=1000 -e DBOX_GID=100 janeczku/dropbox"
     alias ssh-iohk='ssh -F ~/.ssh/iohk.config'
   '';
 
@@ -141,7 +148,33 @@ in
   services.sshd.enable = true;
 
   # # Enable the OpenSSH daemon.
-  services.openssh.enable = true;
+  services.openssh = {
+    enable = true;
+    passwordAuthentication = false;
+    permitRootLogin = "without-password";
+  };
+
+  services.cardano-node = {
+    environment = "testnet";
+    enable = true;
+    port = 3001;
+    systemdSocketActivation = true;
+  };
+
+  services.cardano-db-sync = {
+    enable = true;
+    postgres = {
+      database = "cexplorer";
+      user = "cardano-node";
+    };
+    user = "cardano-node";
+    cluster = "testnet";
+    extended = true;
+    # environment = (import sources.iohk-nix {}).cardanoLib.environments.testnet;
+    socketPath = config.services.cardano-node.socketPath;
+  };
+
+  hardware.keyboard.zsa.enable = true;
 
   services.postgresql = {
     enable = true;
@@ -161,10 +194,14 @@ in
       max_wal_size = "2GB";
     };
     identMap = ''
-      explorer-users /root cardano-node
-      explorer-users /postgres postgres
-      explorer-users /sam cardano-node
-      explorer-users /cardano-node cardano-node
+      explorer-users root cardano-node
+      explorer-users postgres postgres
+      explorer-users sam cardano-node
+      explorer-users cardano-node cexplorer
+      explorer-users cardano-node cardano-node
+      explorer-users root cexplorer
+      explorer-users sam cexplorer
+      explorer-users cexplorer cexplorer
     '';
     authentication = ''
       local all all ident map=explorer-users
@@ -185,9 +222,19 @@ in
           "ALL TABLES IN SCHEMA public" = "ALL PRIVILEGES";
         };
       }
+      {
+        name = "cexplorer";
+        ensurePermissions = {
+          "DATABASE cexplorer" = "ALL PRIVILEGES";
+          "ALL TABLES IN SCHEMA information_schema" = "SELECT";
+          "ALL TABLES IN SCHEMA pg_catalog" = "SELECT";
+        };
+      }
     ];
     initialScript = pkgs.writeText "init.sql" ''
       CREATE USER sam WITH SUPERUSER;
+      CREATE USER cexplorer WITH SUPERUSER;
+      CREATE USER cardano-node WITH SUPERUSER;
       CREATE USER root WITH SUPERUSER;
       CREATE DATABASE sam WITH OWNER sam;
     '';
@@ -225,14 +272,23 @@ in
   };
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
-  users.extraUsers.sam = {
+  users.users.sam = {
     createHome = true;
     extraGroups = ["wheel" "video" "audio" "disk" "networkmanager" "docker" "libvirtd" "dialout" "plugdev" ];
     group = "users";
     home = "/home/sam";
     isNormalUser = true;
     uid = 1000;
+    openssh.authorizedKeys.keys = [
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJzHCI1ZW7gnF7l7d/qIiow4kViRwp0pvybZVjlBZBrW cardno:000610630425"
+    ];
   };
+
+  users.users.root.openssh.authorizedKeys.keys = [
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJzHCI1ZW7gnF7l7d/qIiow4kViRwp0pvybZVjlBZBrW cardno:000610630425"
+  ];
+
+  users.extraUsers.cexplorer.isSystemUser = true;
 
   virtualisation.virtualbox.host.enable = true;
   users.extraGroups.vboxusers.members = [ "sam" ];
@@ -251,6 +307,13 @@ in
     # "mantis-ops.cachix.org-1:SornDcX8/9rFrpTjU+mAAb26sF8mUpnxgXNjmKGcglQ="
   ];
 
+  nix = {
+    package = pkgs.nixUnstable; # or versioned attributes like nix_2_4
+    extraOptions = ''
+      experimental-features = nix-command flakes
+    '';
+  };
+
   nixpkgs.config.allowUnfree = true;
 
   # # This value determines the NixOS release with which your system is to be
@@ -260,21 +323,44 @@ in
   system.stateVersion = "18.09"; # Did you read the comment?
 
   services.vnstat.enable = true;
-  # networking.wireguard.interfaces = {
-  #   wg0 = {
-  #     ips = [ "10.0.0.1/24" ];
-  #     listenPort = 51820;
 
-  #     privateKeyFile = "/etc/wg0/private";
-
-  #     peers = [
-  #       { # EYD VM
-  #         publicKey = "7X0oyS0bWJDxbXpo1PqA4o5GPYJiKDxmLb9AsZriREU=";
-  #         allowedIPs = [ "10.0.0.2/32" ];
-  #         persistentKeepalive = 25;
-  #         endpoint = "192.168.56.224:51820";
-  #       }
-  #     ];
-  #   };
+  # networking.nat = {
+  #   enable = true;
+  #   externalInterface = "
   # };
+
+  networking.firewall = {
+    enable = true;
+
+    allowedUDPPorts = [ 51820 ];
+    allowedTCPPorts = [ 22 ];
+
+    interfaces.wg0.allowedUDPPorts = [ 22 ];
+    interfaces.wg0.allowedTCPPorts = [ 22 ];
+  };
+  networking.wireguard.interfaces = {
+    wg0 = {
+      ips = [ "10.100.0.2/24" ];
+      listenPort = 51820;
+
+      generatePrivateKeyFile = true;
+      privateKeyFile = "/etc/wireguard/wg0";
+
+      peers = [
+        {
+          publicKey = "nUc1O2ASgcpDcov/T/LzSxleaH1TpW1vpdCofaSq9zw=";
+          allowedIPs = [ "10.100.0.1/32" ];
+          persistentKeepalive = 25;
+          endpoint = "194.195.122.100:51820";
+        }
+      ];
+    };
+  };
+
+  # networking.networkmanager.insertNameservers = [ "10.100.0.1" ];
+  networking.nameservers = [ "10.100.0.1" ];
+
+  services.syncthing = {
+    enable = true;
+  };
 }

@@ -5,10 +5,14 @@ let
   sources = import ./sources.nix { inherit pkgs; };
   nixpkgs = sources.nixpkgs;
 
+  iohkNix = import sources.iohk-nix {};
+
   # for inclusion in pkgs:
   overlays = [
-    (pkgs: _: {
+    (self: super: {
       inherit sources;
+      linode-cli = self.python3Packages.callPackage pkgs/linode-cli.nix {};
+      inherit iohkNix;
     })
   ];
 

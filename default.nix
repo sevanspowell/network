@@ -45,11 +45,29 @@ let
     inherit pkgs;
     disk = "/dev/vda";
   };
+
+  linodeConfig = (import "${nixpkgs}/nixos/lib/eval-config.nix" {
+    inherit system;
+    modules = [
+      ./nixos/modules/linode/linode-image.nix
+    ];
+  });
+
+  openstackConfig = (import "${nixpkgs}/nixos/lib/eval-config.nix" {
+    inherit system;
+    modules = [
+      "${nixpkgs}/nixos/maintainers/scripts/openstack/openstack-image.nix"
+    ];
+  });
 in
 rec {
   vm = (vmConfig ./nodes/plum/configuration.nix).config.system.build.vm;
   iso = isoConfig.config.system.build.isoImage;
   install = installerEnv ./nodes/plum/configuration.nix;
+
+  linode-img = linodeConfig.config.system.build.linodeImage;
+
+  openstack-img = openstackConfig.config.system.build.openstackImage;
 
   # nix-build -A tests.installer.x86_64-linux.test.driverInteractive
   tests = pkgs.callPackage ./nixos/tests/default.nix { inherit system; };
@@ -77,6 +95,18 @@ rec {
   # QEMU_OPTS="-usb -device usb-host,hostbus=1,hostaddr=3"
   # QEMU_OPTS=$(lsusb | grep Yubikey | awk '{print "-usb -device usb-host,hostbus="$2",hostaddr="$4}' | sed 's/:$//')
   nodes = {
+    matrix = (import "${nixpkgs}/nixos" {
+      configuration = { ... }: {
+        imports = [
+          ./nixos/modules/matrix.nix
+          {
+            users.mutableUsers = false;
+            users.extraUsers.root.initialPassword = "";
+          }
+        ];
+      };
+    });
+
     orchid = (import "${nixpkgs}/nixos" {
       configuration = { ... }: {
         imports = [
@@ -150,4 +180,6 @@ rec {
       };
     });
   };
+
+  inherit (pkgs) linode-cli;
 }
