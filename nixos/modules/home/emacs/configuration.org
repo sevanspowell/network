@@ -1104,8 +1104,8 @@ By default epa-file tries to use password-based encryption. I always want to use
   (use-package org-gcal
     :ensure t
     :config
-    (setq org-gcal-client-id "663970852062-6fj12lco2g8t3tuoc5uhgc4f28c6a9i7.apps.googleusercontent.com"
-          org-gcal-client-secret "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"
+    (setq org-gcal-client-id ""
+          org-gcal-client-secret ""
           org-gcal-fetch-file-alist '(("samuel.evans-powell@iohk.io" .  "~/schedule.org")))
     )
 #+END_SRC

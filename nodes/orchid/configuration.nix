@@ -2,26 +2,22 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ modulesPath, config, pkgs, lib, ... }:
+{ modulesPath, config, pkgs, lib, inputs, ... }:
 
 let
-  sources = import ../../nix/sources.nix;
+  cardano-cli = inputs.cardano-node.packages.x86_64-linux.cardano-cli;
 
-  cardano-cli = (import sources.cardano-node {}).cardano-cli;
+  linode-cli = inputs.self.packages.x86_64-linux.linode-cli;
 
-  linode-cli = (import ../../nix {}).linode-cli;
 in
 
 {
   imports = [
     "${modulesPath}/installer/cd-dvd/channel.nix"
-    "${sources.home-manager}/nixos"
-    ../../nixos/modules/copy-network-repo.nix
+    # ../../nixos/modules/copy-network-repo.nix
     ../../nixos/modules/direnv
     ../../nixos/modules/yubikey-gpg
     ../../nixos/modules/weechat
-    "${sources.cardano-node}/nix/nixos"
-    "${sources.cardano-db-sync}/nix/nixos"
   ];
 
   nix.nixPath = [
@@ -31,6 +27,9 @@ in
   ];
 
   home-manager.users.sam = {...}: {
+
+    home.stateVersion = "21.11";
+
     imports = [
       ../../nixos/modules/home/emacs
       ../../nixos/modules/home/xmobar
@@ -38,7 +37,7 @@ in
       ../../nixos/modules/home/xresources
       ../../nixos/modules/home/dunst
       ../../nixos/modules/home/git
-      ../../nixos/modules/home/chat
+      # ../../nixos/modules/home/chat
       ../../nixos/modules/home/offlineimap
     ];
   };
@@ -136,23 +135,14 @@ in
   ];
 
   environment.interactiveShellInit = ''
-    alias dropbox="docker exec -it dropbox dropbox"
-    alias dropbox-start="docker run -d --restart=always --name=dropbox \
-      -v /home/sam/Dropbox:/dbox/Dropbox \
-      -v /home/sam/.dropbox:/dbox/.dropbox \
-      -e DBO_UID=1000 -e DBOX_GID=100 janeczku/dropbox"
     alias ssh-iohk='ssh -F ~/.ssh/iohk.config'
   '';
 
-  # # List services that you want to enable:
+  # List services that you want to enable:
   services.sshd.enable = true;
 
-  # # Enable the OpenSSH daemon.
-  services.openssh = {
-    enable = true;
-    passwordAuthentication = false;
-    permitRootLogin = "without-password";
-  };
+  # Enable the OpenSSH daemon.
+  services.openssh.enable = true;
 
   services.cardano-node = {
     environment = "testnet";
@@ -246,11 +236,11 @@ in
   virtualisation.libvirtd.enable = true;
   networking.firewall.checkReversePath = false;
 
-  # # Enable CUPS to print documents.
+  # Enable CUPS to print documents.
   services.printing.enable = true;
   services.printing.drivers = [ pkgs.hplip ];
 
-  # # Enable sound.
+  # Enable sound.
   sound.enable = true;
   hardware.pulseaudio.enable = true;
   hardware.pulseaudio.support32Bit = true;
@@ -264,6 +254,7 @@ in
     videoDrivers = ["nvidia"];
 
     # displayManager.defaultSession = "none+xmonad";
+    desktopManager.xterm.enable = true;
 
     # windowManager.xmonad = {
     #   enable = true;
@@ -272,7 +263,7 @@ in
   };
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
-  users.users.sam = {
+  users.extraUsers.sam = {
     createHome = true;
     extraGroups = ["wheel" "video" "audio" "disk" "networkmanager" "docker" "libvirtd" "dialout" "plugdev" ];
     group = "users";
@@ -289,6 +280,8 @@ in
   ];
 
   users.extraUsers.cexplorer.isSystemUser = true;
+  users.extraUsers.cexplorer.group = "cexplorer";
+  users.groups.cexplorer = {};
 
   virtualisation.virtualbox.host.enable = true;
   users.extraGroups.vboxusers.members = [ "sam" ];
@@ -316,27 +309,16 @@ in
 
   nixpkgs.config.allowUnfree = true;
 
-  # # This value determines the NixOS release with which your system is to be
-  # # compatible, in order to avoid breaking some software such as database
-  # # servers. You should change this only after NixOS release notes say you
-  # # should.
-  system.stateVersion = "18.09"; # Did you read the comment?
+  # This value determines the NixOS release with which your system is to be
+  # compatible, in order to avoid breaking some software such as database
+  # servers. You should change this only after NixOS release notes say you
+  # should.
+  system.stateVersion = "20.09"; # Did you read the comment?
 
   services.vnstat.enable = true;
 
-  # networking.nat = {
-  #   enable = true;
-  #   externalInterface = "
-  # };
-
   networking.firewall = {
-    enable = true;
-
     allowedUDPPorts = [ 51820 ];
-    allowedTCPPorts = [ 22 ];
-
-    interfaces.wg0.allowedUDPPorts = [ 22 ];
-    interfaces.wg0.allowedTCPPorts = [ 22 ];
   };
   networking.wireguard.interfaces = {
     wg0 = {
@@ -357,10 +339,9 @@ in
     };
   };
 
-  # networking.networkmanager.insertNameservers = [ "10.100.0.1" ];
   networking.nameservers = [ "10.100.0.1" ];
 
-  services.syncthing = {
-    enable = true;
-  };
+  # services.syncthing = {
+  #   enable = true;
+  # };
 }

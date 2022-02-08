@@ -24,7 +24,7 @@ with lib;
 let
   cfg = config.hardware.yubikey-gpg;
 
-  yubikey-touch-detector = pkgs.callPackage ../../../nix/pkgs/yubikey-touch-detector {};
+  # yubikey-touch-detector = pkgs.callPackage ../../../nix/pkgs/yubikey-touch-detector {};
 
   userSpecificOpts = { config, ... }:
     {
@@ -118,7 +118,7 @@ in
       yubikey-manager
       ccid
       importYubikey
-      yubikey-touch-detector
+      # yubikey-touch-detector
     ];
 
     services.dbus.enable = true;
@@ -131,6 +131,7 @@ in
 
     home-manager.users = mapAttrs (user: opts: {...}: {
 
+      home.stateVersion = "21.11";
       # services.gpg-agent = {
       #   enable = true;
       #   enableSshSupport = true;
