@@ -31,8 +31,13 @@
          allow-import-from-derivation = true
       '';
 
+      EDITOR = "emacsclient -c -a emacs";
+
       nativeBuildInputs = [
         deploy.packages."${pkgs.system}".deploy-rs
+        pkgs.ssh-to-age
+        pkgs.sops
+        pkgs.vim
       ];
     };
   })

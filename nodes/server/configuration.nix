@@ -140,7 +140,7 @@
         }
       }
 
-      desktop.home {
+      orchid.home {
         template IN A {
           answer "{{ .Name }} 0 IN A 10.100.0.2"
         }
