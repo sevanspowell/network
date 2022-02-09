@@ -43,11 +43,13 @@
       nixosSystem = nixpkgs.lib.makeOverridable nixpkgs.lib.nixosSystem;
     in {
       orchid = nixosSystem (import ./nodes/orchid inputs);
+      server = nixosSystem (import ./nodes/server inputs);
     };
 
   deploy = {
     user = "root";
     sshUser = "root";
+
     nodes = {
       orchid = {
         hostname = "10.100.0.2:22";
@@ -55,6 +57,14 @@
         profiles.system.path =
           deploy.lib.x86_64-linux.activate.nixos
             self.nixosConfigurations."orchid";
+      };
+
+      server = {
+        hostname = "10.100.0.1:22";
+        fastConnection = true;
+        profiles.system.path =
+          deploy.lib.x86_64-linux.activate.nixos
+            self.nixosConfigurations."server";
       };
     };
   };
