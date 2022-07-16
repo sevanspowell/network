@@ -49,6 +49,7 @@
     in {
       orchid = nixosSystem (import ./nodes/orchid inputs);
       server = nixosSystem (import ./nodes/server inputs);
+      mooncake = nixosSystem (import ./nodes/mooncake inputs);
     };
 
   deploy = {
