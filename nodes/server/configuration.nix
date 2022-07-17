@@ -2,10 +2,17 @@
 # your system.  Help is available in the configuration.nix(5) man page
 # and in the NixOS manual (accessible by running ‘nixos-help’).
 
-{ config, pkgs, ... }:
+{ modulesPath, config, pkgs, inputs, ... }:
 
 {
-  imports = [];
+  imports = [
+    "${modulesPath}/installer/cd-dvd/channel.nix"
+  ];
+
+  nix.nixPath = [
+    "nixpkgs=/nix/var/nix/profiles/per-user/root/channels/nixos"
+    "/nix/var/nix/profiles/per-user/root/channels"
+  ];
 
   # Use the GRUB 2 boot loader.
   boot.loader.grub.enable = true;
@@ -70,6 +77,8 @@
     vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
     wget
     git
+    # Required for full-featured term, otherwise backspace etc. won't work
+    rxvt_unicode.terminfo
   ];
 
   # Some programs need SUID wrappers, can be configured further or are
@@ -81,12 +90,6 @@
   # };
 
   # List services that you want to enable:
-
-  # Enable the OpenSSH daemon.
-  services.openssh = {
-    enable = true;
-    passwordAuthentication = false;
-  };
 
   users.users."root".openssh.authorizedKeys.keys = [
     "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJzHCI1ZW7gnF7l7d/qIiow4kViRwp0pvybZVjlBZBrW cardno:000610630425"
@@ -147,62 +150,72 @@
       }
     '';
 
-  users.users.nginx.extraGroups = [ "acme" ];
+  # users.users.nginx.extraGroups = [ "acme" ];
   services.nginx.enable = true;
-  services.nginx.virtualHosts."_" = {
-    default = true;
-    forceSSL = true;
-    useACMEHost = "samandgeorgia.com";
-    locations."/custom_404.html" = {
-      root = "/var/www/wedding-website";
-      extraConfig = ''
-        internal;
-      '';
+  # services.nginx.virtualHosts."_" = {
+  #   default = true;
+  #   forceSSL = true;
+  #   useACMEHost = "samandgeorgia.com";
+  #   locations."/custom_404.html" = {
+  #     root = "/var/www/wedding-website";
+  #     extraConfig = ''
+  #       internal;
+  #     '';
+  #   };
+  #   extraConfig = ''
+  #     error_page 404 /custom_404.html;
+  #   '';
+  # };
+  # services.nginx.virtualHosts."wedding.samandgeorgia.com" = {
+  #   forceSSL = true;
+  #   enableACME = true;
+  #   root = "/var/www/wedding-website/wedding";
+  #   extraConfig = ''
+  #     error_page 404 /custom_404.html;
+  #   '';
+  # };
+  # services.nginx.virtualHosts."party.samandgeorgia.com" = {
+  #   forceSSL = true;
+  #   enableACME = true;
+  #   root = "/var/www/wedding-website/reception";
+  #   extraConfig = ''
+  #     error_page 404 /custom_404.html;
+  #   '';
+  # };
+
+  # security.acme.acceptTerms = true;
+  # security.acme.certs = {
+  #  "samandgeorgia.com" = {
+  #    domain = "*.samandgeorgia.com";
+  #    dnsProvider = "cloudflare";
+  #    credentialsFile = "/var/lib/acme/cloudflare.api";
+  #    dnsPropagationCheck = true;
+  #    email = "mail@sevanspowell.net";
+  #    group = "nginx";
+  #    #webroot = "/var/lib/acme/acme-challenge";
+  #  };
+  #  "wedding.samandgeorgia.com" = {
+  #    email = "mail@sevanspowell.net";
+  #    group = "nginx";
+  #  };
+  #  "party.samandgeorgia.com" = {
+  #    email = "mail@sevanspowell.net";
+  #    group = "nginx";
+  #  };
+  # };
+  # security.acme.email = "mail@sevanspowell.net";
+
+  services.syncthing = {
+    enable = true;
+    overrideDevices = true;
+    devices = {
+      "orchid" = {
+        id = "POCQPR4-352H2TM-FGQPSAF-GUILCVW-ZOSF3ZF-Q77PPOC-GLPUDIV-HTQNYAE";
+        addresses = [ "tcp://orchid:22000" ];
+        introducer = true;
+      };
     };
-    extraConfig = ''
-      error_page 404 /custom_404.html;
-    '';
   };
-  services.nginx.virtualHosts."wedding.samandgeorgia.com" = {
-    forceSSL = true;
-    enableACME = true;
-    root = "/var/www/wedding-website/maintenance";
-    extraConfig = ''
-      error_page 404 /custom_404.html;
-    '';
-  };
-  services.nginx.virtualHosts."party.samandgeorgia.com" = {
-    forceSSL = true;
-    enableACME = true;
-    root = "/var/www/wedding-website/maintenance";
-    extraConfig = ''
-      error_page 404 /custom_404.html;
-    '';
-  };
-
-  security.acme.acceptTerms = true;
-  security.acme.certs = {
-   "samandgeorgia.com" = {
-     domain = "*.samandgeorgia.com";
-     dnsProvider = "cloudflare";
-     credentialsFile = "/var/lib/acme/cloudflare.api";
-     dnsPropagationCheck = true;
-     email = "mail@sevanspowell.net";
-     group = "nginx";
-     #webroot = "/var/lib/acme/acme-challenge";
-   };
-   "wedding.samandgeorgia.com" = {
-     email = "mail@sevanspowell.net";
-     group = "nginx";
-   };
-   "party.samandgeorgia.com" = {
-     email = "mail@sevanspowell.net";
-     group = "nginx";
-   };
-  };
-  security.acme.email = "mail@sevanspowell.net";
-
-  services.syncthing.enable = true;
 
   # Open ports in the firewall.
   # networking.firewall.allowedTCPPorts = [ ... ];
@@ -218,5 +231,61 @@
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
   system.stateVersion = "21.11"; # Did you read the comment?
 
-}
+  # Enable the OpenSSH daemon.
+  services.openssh = {
+    enable = true;
+    passwordAuthentication = false;
+    extraConfig = ''
+      StreamLocalBindUnlink yes
+    '';
+  };
 
+  # useGlobalPkgs/useUserPackages Required with flakes
+  # See https://nix-community.github.io/home-manager/index.html#sec-flakes-nixos-module
+  # and https://github.com/divnix/digga/issues/30
+  home-manager.useGlobalPkgs = true;
+  home-manager.useUserPackages = true;
+
+  # Need to forward ssh socket as well for ssh-agent to work
+  # ssh dev@194.195.122.100 \
+  # -R/run/user/1000/gnupg/S.gpg-agent:/run/user/1000/gnupg/S.gpg-agent.extra \
+  # -R/run/user/1000/gnupg/S.gpg-agent.ssh:/run/user/1000/gnupg/S.gpg-agent.ssh \
+  # -vvv
+
+  # Need to forward normal socket (not extra) if you want gpg --card-status to work [but this isn't usually required]
+  home-manager.users.dev = {...}: {
+    services.gpg-agent = {
+      enable = true;
+      enableSshSupport = true;
+      # Pinentry should run on the client
+      pinentryFlavor = null;
+    };
+
+    programs.gpg = {
+      enable = true;
+
+      scdaemonSettings = {
+        disable-ccid = true;
+        reader-port = "Yubico Yubi";
+      };
+    };
+
+    # Required for ensuring SSH commands look in the correct place for ssh
+    # authorization.
+    home.file.".profile".text = ''
+      export SSH_AUTH_SOCK=$(gpgconf --list-dirs agent-ssh-socket)
+    '';
+  };
+
+  # Base dev machine
+  users.users.dev = {
+    createHome = true;
+    extraGroups = ["wheel"];
+    group = "users";
+    isNormalUser = true;
+    uid = 1000;
+    openssh.authorizedKeys.keys = [
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJzHCI1ZW7gnF7l7d/qIiow4kViRwp0pvybZVjlBZBrW cardno:000610630425"
+    ];
+  };
+}
