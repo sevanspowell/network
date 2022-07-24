@@ -80,10 +80,11 @@ in
     cardano-cli
     cabal-install
     cabal2nix
-    chromium
+    # chromium
     cntr
     # dhcpcd
     docker
+    docker-compose
     dmenu
     firefox
     feh
@@ -97,7 +98,7 @@ in
     libreoffice
     mitscheme
     mosh
-    nixops
+    # nixops
     openssl
     openvpn
     pandoc
@@ -139,6 +140,7 @@ in
 
   environment.interactiveShellInit = ''
     alias ssh-iohk='ssh -F ~/.ssh/iohk.config'
+    alias limit='systemd-run --scope -p MemoryMax=500M -p CPUWeight=10 -p CPUQuota=600% --user'
   '';
 
   # List services that you want to enable:
@@ -148,20 +150,20 @@ in
   services.openssh.enable = true;
 
   services.cardano-node = {
-    environment = "testnet";
-    enable = true;
+    environment = "mainnet";
+    enable = false;
     port = 3001;
     systemdSocketActivation = true;
   };
 
   services.cardano-db-sync = {
-    enable = true;
+    enable = false;
     postgres = {
       database = "cexplorer";
       user = "cardano-node";
     };
     user = "cardano-node";
-    cluster = "testnet";
+    cluster = "mainnet";
     extended = true;
     # environment = (import sources.iohk-nix {}).cardanoLib.environments.testnet;
     socketPath = config.services.cardano-node.socketPath;
@@ -241,7 +243,9 @@ in
 
   # Enable CUPS to print documents.
   services.printing.enable = true;
-  services.printing.drivers = [ pkgs.hplip ];
+  services.printing.drivers = [ pkgs.hplip pkgs.epson-escpr2 ];
+  services.avahi.enable = true;
+  services.avahi.nssmdns = true;
 
   # Enable sound.
   sound.enable = true;
@@ -286,14 +290,14 @@ in
   users.extraUsers.cexplorer.group = "cexplorer";
   users.groups.cexplorer = {};
 
-  virtualisation.virtualbox.host.enable = true;
+  # virtualisation.virtualbox.host.enable = true;
   users.extraGroups.vboxusers.members = [ "sam" ];
 
   nix.binaryCaches = [
     "https://sevanspowell-personal.cachix.org"
     "https://cache.nixos.org"
     "https://iohk.cachix.org"
-    "https://hydra.iohk.io"
+    "https://cache.iog.io"
   ];
   nix.binaryCachePublicKeys = [
     "sevanspowell-personal.cachix.org-1:VOY8b19A+HGl1xUof+ucLFTDRCYBhjv+q94rxt5t5Bk="
@@ -303,9 +307,22 @@ in
     # "mantis-ops.cachix.org-1:SornDcX8/9rFrpTjU+mAAb26sF8mUpnxgXNjmKGcglQ="
   ];
 
+  nix.buildMachines = [
+      {
+        hostName = "mac-mini-1";
+        systems = [ "x86_64-darwin" ];
+        maxJobs = 1;
+      }
+    ];
+
+  nix.buildCores = 2;
+  nix.maxJobs = 4;
+
   nix = {
-    package = pkgs.nixUnstable; # or versioned attributes like nix_2_4
+    package = pkgs.nix_2_7;
     extraOptions = ''
+      builders = @/etc/nix/machines
+      builders-use-substitutes = true
       experimental-features = nix-command flakes
     '';
   };
@@ -321,7 +338,9 @@ in
   services.vnstat.enable = true;
 
   networking.firewall = {
-    allowedUDPPorts = [ 51820 ];
+    allowedUDPPorts = [ 51820 ]  # Wireguard
+                   ++ [ 21027 ]; # syncthing
+    allowedTCPPorts = [ 22000 ]; # syncthing
   };
   networking.wireguard.interfaces = {
     wg0 = {
@@ -344,7 +363,15 @@ in
 
   networking.nameservers = [ "10.100.0.1" ];
 
-  # services.syncthing = {
-  #   enable = true;
-  # };
+  services.syncthing = {
+    enable = true;
+    overrideDevices = true;
+    devices = {
+      "server" = {
+        id = "5HGYKKS-QQ7STUR-3DPAKBX-UUASJWW-Y437X52-NIHQ2BT-B4SUJBA-PDGD4QH";
+        addresses = [ "tcp://server:22000" ];
+        introducer = true;
+      };
+    };
+  };
 }
