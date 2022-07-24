@@ -7,15 +7,6 @@ let
   ];
 in
 {
-  # ssh : user [pubKeys]
-  services.openssh.enable = true;
-  services.openssh.passwordAuthentication = false;
-  # Automatically remove stale sockets when connecting to the remote machine.
-  services.openssh.extraConfig = ''
-    StreamLocalBindUnlink yes
-  '';
-  users.users.dev.openssh.authorizedKeys.keys = pubKeys;
-
   # Unknown
   networking.hostName = "mooncake";
 

@@ -8,5 +8,6 @@
     ./configuration.nix
     ./lib/base.nix
     ./lib/ssh.nix
+    ./lib/gpg.nix
   ];
 }
