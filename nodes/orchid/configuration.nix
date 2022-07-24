@@ -9,6 +9,8 @@ let
 
   linode-cli = inputs.self.packages.x86_64-linux.linode-cli;
 
+  nix-ll = inputs.self.packages.x86_64-linux.nix-ll;
+
 in
 
 {
@@ -89,6 +91,7 @@ in
     go-jira
     git
     linode-cli
+    nix-ll
     gnumake
     ledger
     libreoffice

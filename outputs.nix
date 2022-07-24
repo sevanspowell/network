@@ -23,6 +23,7 @@
 
     packages = {
       linode-cli = pkgs.python3Packages.callPackage ./pkgs/linode-cli.nix {};
+      nix-ll = pkgs.callPackage ./pkgs/nix-ll.nix {};
     };
 
     devShell = pkgs.mkShell {
