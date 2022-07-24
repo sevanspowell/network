@@ -381,6 +381,11 @@ Bootstrap
   )
   (use-package lsp-ui
    :ensure t
+   :commands lsp-ui-mode
+   :custom
+   (lsp-ui-peek-always-show t)
+   (lsp-ui-sideline-show-hover t)
+   (lsp-ui-doc-enable nil)
   )
   (defun rename-file-and-buffer ()
     "Rename the current buffer and file it is visiting."
@@ -725,6 +730,15 @@ Clocking
     "tdc" 'org-table-delete-column
     "p" 'org-tree-slide-mode
     )
+   (general-define-key
+    :prefix ","
+    :states 'normal
+    :keymaps '(org-mode-map)
+    "c" '(lambda () (interactive) (
+      let ((current-prefix-arg))
+          (progn (call-interactively 'calc-dispatch)
+                 )))
+    )
 #+END_SRC
 
 Exporting
@@ -801,22 +815,44 @@ Load nix-managed emacs packages:
     (lsp-ui-peek-enable t)
     (lsp-ui-peek-show-directory t)
     (lsp-ui-doc-enable t)
-    (lsp-ui-doc-position 'top)
+    (lsp-ui-doc-show-with-cursor nil)
+    (lsp-ui-doc-position 'at-point)
     (lsp-ui-imenu-window-width 20))
   (use-package lsp-mode
     :init
-      (setq lsp-keymap-prefix ",l")
+       (setq lsp-keymap-prefix nil)
     :hook ((haskell-mode . lsp-deferred)
            (haskell-literate-mode . lsp-deferred)
-           (lsp-mode . lsp-enable-which-key-integration))
+           (lsp-mode . lsp-enable-which-key-integration)
+           (lsp-mode . lsp-ui-mode))
     :config
       (add-hook 'hack-local-variables-hook (lambda () (when lsp-mode (lsp))))
       (setq-default lsp-headerline-breadcrumb-enable nil)
     :custom
+       (general-define-key
+        :states '(normal motion)
+        :keymaps 'lsp-mode-map
+        :prefix ","
+        "l" lsp-command-map
+        )
+      (lsp-eldoc-render-all nil)
+      (lsp-signature-auto-activate nil)
+      (lsp-signature-doc-lines 20)
+      (lsp-signature-function 'lsp-signature-posframe)
       (lsp-lens-enable t)
       (lsp-modeline-diagnostics-scope :workspace)
       (lsp-file-watch-threshold 2000)
-
+      ;; what to use when checking on-save. "check" is default, I prefer clippy
+      (lsp-rust-analyzer-cargo-watch-command "clippy")
+      (lsp-idle-delay 0.6)
+      ;; enable / disable the hints as you prefer:
+      (lsp-rust-analyzer-server-display-inlay-hints t)
+      (lsp-rust-analyzer-display-lifetime-elision-hints-enable "skip_trivial")
+      (lsp-rust-analyzer-display-chaining-hints t)
+      (lsp-rust-analyzer-display-lifetime-elision-hints-use-parameter-names nil)
+      (lsp-rust-analyzer-display-closure-return-type-hints t)
+      (lsp-rust-analyzer-display-parameter-hints nil)
+      (lsp-rust-analyzer-display-reborrow-hints nil)
     :commands lsp
     )
 
@@ -840,8 +876,7 @@ Load nix-managed emacs packages:
     ;; Load lsp-haskell when we activate haskell mode in a buffer
     ;; (add-hook 'haskell-mode-hook #'lsp-haskell-enable)
     ;; Keep our haskell tags up to date (used for jumping to defn. etc.)
-    (custom-set-variables '(haskell-tags-on-save t))
-   )
+    (custom-set-variables '(haskell-tags-on-save nil))
     (general-define-key
       :states '(normal motion)
       :keymaps 'haskell-mode-map
@@ -858,7 +893,6 @@ Load nix-managed emacs packages:
       "gb" 'xref-pop-marker-stack
       "gc" '(haskell-cabal-visit-file :which-key "cabal file")
       "hr" '((lambda () (interactive) (progn (kill-process "*emacs-local-hoogle*"))) :which-key "hoogle reload")
-      "l"  lsp-command-map
       "hh"  'haskell-hoogle-lookup-from-local
      )
     (general-define-key
@@ -870,7 +904,7 @@ Load nix-managed emacs packages:
       "pr" 'haskell-process-restart
       )
     (setq tags-revert-without-query 1)
-
+   )
 #+END_SRC
 
 ** Elisp
@@ -1114,6 +1148,46 @@ By default epa-file tries to use password-based encryption. I always want to use
 
 #+BEGIN_SRC emacs-lisp
   (add-hook 'writeroom-mode 'visual-line-mode)
+#+END_SRC
+
+
+** Rust
+
+#+BEGIN_SRC emacs-lisp
+  (use-package rust-mode
+    :ensure t
+    :config
+    (add-hook 'rust-mode-hook
+              (lambda () (setq indent-tabs-mode nil)))
+    (add-hook 'rust-mode-hook #'lsp)
+    (setq rust-format-on-save t)
+    ;; (general-define-key
+    ;;   :states '(normal visual insert emacs)
+    ;;   :keymaps 'rust-mode-map
+
+    ;;   "C-c C-c"  'rust-run
+    ;; )
+    )
+  (use-package rustic
+    :ensure
+    :bind (:map rustic-mode-map
+                ("M-j" . lsp-ui-imenu)
+                ("M-?" . lsp-find-references)
+                ("C-c C-c l" . flycheck-list-errors)
+                ("C-c C-c a" . lsp-execute-code-action)
+                ("C-c C-c r" . lsp-rename)
+                ("C-c C-c q" . lsp-workspace-restart)
+                ("C-c C-c Q" . lsp-workspace-shutdown)
+                ("C-c C-c s" . lsp-rust-analyzer-status))
+    :config
+    ;; uncomment for less flashiness
+    ;; (setq lsp-eldoc-hook nil)
+    ;; (setq lsp-enable-symbol-highlighting nil)
+    ;; (setq lsp-signature-auto-activate nil)
+  
+    ;; comment to disable rustfmt on save
+    (setq rustic-format-on-save t)
+    )
 #+END_SRC
 
 ** Contact
