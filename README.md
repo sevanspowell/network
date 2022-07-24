@@ -4,6 +4,7 @@
 
 nix build .#nixosConfigurations.orchid.config.system.build.toplevel
 nix build .#nixosConfigurations.server.config.system.build.vm
+nix build .#nixosConfigurations.install-eyd.config.system.build.isoImage
 
 ## Deploy
 
