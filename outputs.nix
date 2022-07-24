@@ -24,6 +24,7 @@
     packages = {
       linode-cli = pkgs.python3Packages.callPackage ./pkgs/linode-cli.nix {};
       nix-ll = pkgs.callPackage ./pkgs/nix-ll.nix {};
+      install-eyd = pkgs.callPackage ./pkgs/install-eyd.nix {};
     };
 
     devShell = pkgs.mkShell {
