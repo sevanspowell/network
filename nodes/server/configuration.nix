@@ -7,12 +7,16 @@
 {
   imports = [
     "${modulesPath}/installer/cd-dvd/channel.nix"
+    ../mooncake/lib/base.nix
+    ../mooncake/lib/gpg-passthru.nix
   ];
 
   nix.nixPath = [
     "nixpkgs=/nix/var/nix/profiles/per-user/root/channels/nixos"
     "/nix/var/nix/profiles/per-user/root/channels"
   ];
+
+  gpg-passthru.users = [ "dev" ];
 
   # Use the GRUB 2 boot loader.
   boot.loader.grub.enable = true;
@@ -48,9 +52,6 @@
   # Enable the X11 windowing system.
   # services.xserver.enable = true;
 
-
-  
-
   # Configure keymap in X11
   # services.xserver.layout = "us";
   # services.xserver.xkbOptions = "eurosign:e";
@@ -77,8 +78,6 @@
     vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
     wget
     git
-    # Required for full-featured term, otherwise backspace etc. won't work
-    rxvt_unicode.terminfo
   ];
 
   # Some programs need SUID wrappers, can be configured further or are
@@ -230,62 +229,4 @@
   # Before changing this value read the documentation for this option
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
   system.stateVersion = "21.11"; # Did you read the comment?
-
-  # Enable the OpenSSH daemon.
-  services.openssh = {
-    enable = true;
-    passwordAuthentication = false;
-    extraConfig = ''
-      StreamLocalBindUnlink yes
-    '';
-  };
-
-  # useGlobalPkgs/useUserPackages Required with flakes
-  # See https://nix-community.github.io/home-manager/index.html#sec-flakes-nixos-module
-  # and https://github.com/divnix/digga/issues/30
-  home-manager.useGlobalPkgs = true;
-  home-manager.useUserPackages = true;
-
-  # Need to forward ssh socket as well for ssh-agent to work
-  # ssh dev@194.195.122.100 \
-  # -R/run/user/1000/gnupg/S.gpg-agent:/run/user/1000/gnupg/S.gpg-agent.extra \
-  # -R/run/user/1000/gnupg/S.gpg-agent.ssh:/run/user/1000/gnupg/S.gpg-agent.ssh \
-  # -vvv
-
-  # Need to forward normal socket (not extra) if you want gpg --card-status to work [but this isn't usually required]
-  home-manager.users.dev = {...}: {
-    services.gpg-agent = {
-      enable = true;
-      enableSshSupport = true;
-      # Pinentry should run on the client
-      pinentryFlavor = null;
-    };
-
-    programs.gpg = {
-      enable = true;
-
-      scdaemonSettings = {
-        disable-ccid = true;
-        reader-port = "Yubico Yubi";
-      };
-    };
-
-    # Required for ensuring SSH commands look in the correct place for ssh
-    # authorization.
-    home.file.".profile".text = ''
-      export SSH_AUTH_SOCK=$(gpgconf --list-dirs agent-ssh-socket)
-    '';
-  };
-
-  # Base dev machine
-  users.users.dev = {
-    createHome = true;
-    extraGroups = ["wheel"];
-    group = "users";
-    isNormalUser = true;
-    uid = 1000;
-    openssh.authorizedKeys.keys = [
-      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJzHCI1ZW7gnF7l7d/qIiow4kViRwp0pvybZVjlBZBrW cardno:000610630425"
-    ];
-  };
 }
