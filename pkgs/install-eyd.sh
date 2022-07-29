@@ -79,8 +79,9 @@ parted "$DISK_PATH" -- mklabel gpt
 parted "$DISK_PATH" -- mkpart primary 512MiB 100%
 parted "$DISK_PATH" -- mkpart ESP fat32 1MiB 512MiB
 parted "$DISK_PATH" -- set 2 boot on
-export DISK_PART_ROOT="${DISK_PATH}1"
-export DISK_PART_BOOT="${DISK_PATH}2"
+
+export DISK_PART_ROOT="${DISK_PATH}p1"
+export DISK_PART_BOOT="${DISK_PATH}p2"
 
 info "Formatting boot partition ..."
 mkfs.fat -F 32 -n boot "$DISK_PART_BOOT"
@@ -146,6 +147,12 @@ nixos-generate-config --root /mnt
 
 info "Enter password for the root user ..."
 ROOT_PASSWORD_HASH="$(mkpasswd -m sha-512 | sed 's/\$/\\$/g')"
+
+info "Enter personal user name ..."
+read USER_NAME
+
+info "Enter password for '${USER_NAME}' user ..."
+USER_PASSWORD_HASH="$(mkpasswd -m sha-512 | sed 's/\$/\\$/g')"
 
 info "Moving generated hardware-configuration.nix to /persist/etc/nixos/ ..."
 mkdir -p /mnt/persist/etc/nixos
@@ -228,6 +235,17 @@ cat <<EOF > /mnt/persist/etc/nixos/configuration.nix
       root = {
         initialHashedPassword = "${ROOT_PASSWORD_HASH}";
       };
+
+      ${USER_NAME} = {
+        createHome = true;
+	extraGroups = [ "wheel" ];
+	group = "users";
+	uid = 1000;
+	home = "/home/${USER_NAME}";
+	useDefaultShell = true;
+        openssh.authorizedKeys.keys = [ "${AUTHORIZED_SSH_KEY}" ];
+        isNormalUser = true;
+      };
     };
   };
 
@@ -237,7 +255,7 @@ cat <<EOF > /mnt/persist/etc/nixos/configuration.nix
   # this value at the release version of the first install of this system.
   # Before changing this value read the documentation for this option
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
-  system.stateVersion = "20.03"; # Did you read the comment?
+  system.stateVersion = "21.11"; # Did you read the comment?
 
 }
 EOF

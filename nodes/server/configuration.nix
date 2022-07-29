@@ -112,11 +112,11 @@
   networking.wireguard.interfaces = {
     wg0 = {
       ips = [ "10.100.0.1/24" ];
-   
+
       listenPort = 51820;
 
       generatePrivateKeyFile = true;
-      privateKeyFile = "/etc/wireguard/wg0"; 
+      privateKeyFile = "/etc/wireguard/wg0";
 
       peers = [
         {

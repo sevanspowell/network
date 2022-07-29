@@ -6,6 +6,7 @@
 
 let
   cardano-cli = inputs.cardano-node.packages.x86_64-linux.cardano-cli;
+  cardano-node = inputs.cardano-node.packages.x86_64-linux.cardano-node;
 
   linode-cli = inputs.self.packages.x86_64-linux.linode-cli;
 
@@ -78,6 +79,7 @@ in
   # $ nix search wget
   environment.systemPackages = (with pkgs; [
     cardano-cli
+    cardano-node
     cabal-install
     cabal2nix
     # chromium
@@ -354,6 +356,12 @@ in
         {
           publicKey = "nUc1O2ASgcpDcov/T/LzSxleaH1TpW1vpdCofaSq9zw=";
           allowedIPs = [ "10.100.0.1/32" ];
+          persistentKeepalive = 25;
+          endpoint = "194.195.122.100:51820";
+        }
+        {
+          publicKey = "";
+          allowedIPs = [ "10.100.0.3/32" ];
           persistentKeepalive = 25;
           endpoint = "194.195.122.100:51820";
         }
