@@ -6,7 +6,6 @@
   modules = [
     { _module.args.inputs = inputs; }
     ./configuration.nix
-    ./lib/base.nix
-    ./lib/ssh.nix
+    ./hardware-configuration.nix
   ];
 }
