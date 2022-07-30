@@ -33,15 +33,12 @@ function info {
 
 ################################################################################
 
-export DISK=$1
 export AUTHORIZED_SSH_KEY=$2
 
-if ! [[ -v DISK ]]; then
-    err "Missing argument. Expected block device name, e.g. 'sda'"
+if ! [[ -v DISK_PATH ]]; then
+    err "Missing argument. Expected block device by id, e.g. '/dev/disk/by-id/nvme-eui.XXX'"
     exit 1
 fi
-
-export DISK_PATH="/dev/${DISK}"
 
 if ! [[ -b "$DISK_PATH" ]]; then
     err "Invalid argument: '${DISK_PATH}' is not a block special file"
@@ -82,9 +79,9 @@ parted "$DISK_PATH" -- mkpart primary linux-swap -8GiB 100%
 parted "$DISK_PATH" -- mkpart ESP fat32 1MiB 512MiB
 parted "$DISK_PATH" -- set 3 esp on
 
-export DISK_PART_ROOT="${DISK_PATH}p1"
-export DISK_PART_BOOT="${DISK_PATH}p3"
-export DISK_PART_SWAP="${DISK_PATH}p2"
+export DISK_PART_ROOT="${DISK_PATH}-part1"
+export DISK_PART_BOOT="${DISK_PATH}-part3"
+export DISK_PART_SWAP="${DISK_PATH}-part2"
 
 info "Formatting boot partition ..."
 mkfs.fat -F 32 -n boot "$DISK_PART_BOOT"
@@ -158,13 +155,13 @@ mkdir -p /mnt/persist/etc/ssh
 info "Generating NixOS configuration (/mnt/etc/nixos/*.nix) ..."
 nixos-generate-config --root /mnt
 
-# info "Enter password for the root user ..."
+info "Enter password for the root user ..."
 ROOT_PASSWORD_HASH="$(mkpasswd -m sha-512 | sed 's/\$/\\$/g')"
 
-# info "Enter personal user name ..."
+info "Enter personal user name ..."
 read USER_NAME
 
-# info "Enter password for '${USER_NAME}' user ..."
+info "Enter password for '${USER_NAME}' user ..."
 USER_PASSWORD_HASH="$(mkpasswd -m sha-512 | sed 's/\$/\\$/g')"
 
 info "Moving generated hardware-configuration.nix to /persist/etc/nixos/ ..."
@@ -281,5 +278,6 @@ ln -s /mnt/persist/etc/nixos/configuration.nix /mnt/etc/nixos/configuration.nix
 # info "Install with: nixos-install -I \"nixos-config=/mnt/persist/etc/nixos/configuration.nix\""
 nixos-install -I "nixos-config=/mnt/persist/etc/nixos/configuration.nix" --no-root-passwd  # already prompted for and configured password
 
+umount -R /mnt
 # Need to export the pool after installing, otherwise NixOS will fail to mount the pool on reboot
 zpool export ${ZFS_POOL}
