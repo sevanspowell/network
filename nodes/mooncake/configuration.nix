@@ -3,6 +3,7 @@
 {
   imports =
     [
+      ./hardware-configuration.nix
     ];
 
   nix.nixPath =
@@ -47,7 +48,7 @@
 
   services.openssh = {
     enable = true;
-    permitRootLogin = "no";
+    permitRootLogin = "yes";
     passwordAuthentication = false;
     hostKeys =
       [
@@ -66,7 +67,9 @@
   users = {
     mutableUsers = false;
     users = {
-      root = { };
+      root = {
+        openssh.authorizedKeys.keys = [ "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJzHCI1ZW7gnF7l7d/qIiow4kViRwp0pvybZVjlBZBrW cardno:000610630425" ];
+      };
 
       dev = {
         createHome = true;

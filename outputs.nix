@@ -75,6 +75,14 @@
           deploy.lib.x86_64-linux.activate.nixos
             self.nixosConfigurations."server";
       };
+
+      mooncake = {
+        hostname = "192.168.20.10:22";
+        fastConnection = true;
+        profiles.system.path =
+          deploy.lib.x86_64-linux.activate.nixos
+            self.nixosConfigurations."mooncake";
+      };
     };
   };
 
