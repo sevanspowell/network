@@ -64,7 +64,7 @@ export ZFS_POOL="rpool"
 export ZFS_LOCAL="${ZFS_POOL}/local"
 export ZFS_DS_ROOT="${ZFS_LOCAL}/root"
 export ZFS_DS_NIX="${ZFS_LOCAL}/nix"
-export ZFS_DS_RESERVED="${ZFS_LOCAL}/reserved"
+export ZFS_DS_RESERVED="${ZFS_POOL}/reserved"
 
 # persistent datasets
 export ZFS_SAFE="${ZFS_POOL}/safe"
@@ -159,13 +159,13 @@ info "Generating NixOS configuration (/mnt/etc/nixos/*.nix) ..."
 nixos-generate-config --root /mnt
 
 # info "Enter password for the root user ..."
-# ROOT_PASSWORD_HASH="$(mkpasswd -m sha-512 | sed 's/\$/\\$/g')"
+ROOT_PASSWORD_HASH="$(mkpasswd -m sha-512 | sed 's/\$/\\$/g')"
 
 # info "Enter personal user name ..."
-# read USER_NAME
+read USER_NAME
 
 # info "Enter password for '${USER_NAME}' user ..."
-# USER_PASSWORD_HASH="$(mkpasswd -m sha-512 | sed 's/\$/\\$/g')"
+USER_PASSWORD_HASH="$(mkpasswd -m sha-512 | sed 's/\$/\\$/g')"
 
 info "Moving generated hardware-configuration.nix to /persist/etc/nixos/ ..."
 mkdir -p /mnt/persist/etc/nixos
@@ -177,105 +177,109 @@ mv /mnt/etc/nixos/configuration.nix /mnt/persist/etc/nixos/configuration.nix.ori
 info "Backing up the this installer script to /persist/etc/nixos/install.sh.original ..."
 cp "$0" /mnt/persist/etc/nixos/install.sh.original
 
-# info "Writing NixOS configuration to /persist/etc/nixos/ ..."
-# cat <<EOF > /mnt/persist/etc/nixos/configuration.nix
-# { config, pkgs, lib, ... }:
+info "Writing NixOS configuration to /persist/etc/nixos/ ..."
+cat <<EOF > /mnt/persist/etc/nixos/configuration.nix
+{ config, pkgs, lib, ... }:
 
-# {
-#   imports =
-#     [
-#       ./hardware-configuration.nix
-#     ];
+{
+  imports =
+    [
+      ./hardware-configuration.nix
+    ];
 
-#   nix.nixPath =
-#     [
-#       "nixpkgs=/nix/var/nix/profiles/per-user/root/channels/nixos"
-#       "nixos-config=/persist/etc/nixos/configuration.nix"
-#       "/nix/var/nix/profiles/per-user/root/channels"
-#     ];
+  nix.nixPath =
+    [
+      "nixpkgs=/nix/var/nix/profiles/per-user/root/channels/nixos"
+      "nixos-config=/persist/etc/nixos/configuration.nix"
+      "/nix/var/nix/profiles/per-user/root/channels"
+    ];
 
-#   # Use the systemd-boot EFI boot loader.
-#   boot.loader.systemd-boot.enable = true;
-#   boot.loader.efi.canTouchEfiVariables = true;
-#   boot.supportedFilesystems = [ "zfs" ];
+  # Use the systemd-boot EFI boot loader.
+  boot.loader.systemd-boot.enable = true;
+  boot.loader.efi.canTouchEfiVariables = true;
+  boot.supportedFilesystems = [ "zfs" ];
+  boot.zfs.devNodes = "/dev/";
 
-#   # source: https://grahamc.com/blog/erase-your-darlings
-#   boot.initrd.postDeviceCommands = lib.mkAfter ''
-#     zfs rollback -r ${ZFS_BLANK_SNAPSHOT}
-#   '';
+  # source: https://grahamc.com/blog/erase-your-darlings
+  boot.initrd.postDeviceCommands = lib.mkAfter ''
+    zfs rollback -r ${ZFS_BLANK_SNAPSHOT}
+  '';
 
-#   # Set noop scheduler for zfs partitions
-#   services.udev.extraRules = ''
-#     KERNEL=="sd[a-z]*[0-9]*|mmcblk[0-9]*p[0-9]*|nvme[0-9]*n[0-9]*p[0-9]*", ENV{ID_FS_TYPE}=="zfs_member", ATTR{../queue/scheduler}="none"
-#   '';
+  # Set noop scheduler for zfs partitions
+  services.udev.extraRules = ''
+    ACTION="add|change", KERNEL=="sd[a-z]*[0-9]*|mmcblk[0-9]*p[0-9]*|nvme[0-9]*n[0-9]*p[0-9]*", ENV{ID_FS_TYPE}=="zfs_member", ATTR{../queue/scheduler}="none"
+  '';
 
-#   networking.hostName = "home-server";
-#   networking.hostId = "$(head -c 8 /etc/machine-id)";
+  networking.hostName = "home-server";
+  networking.hostId = "$(head -c 8 /etc/machine-id)";
 
-#   networking.useDHCP = false;
-#   networking.interfaces.enp3s0.useDHCP = true;
+  networking.useDHCP = false;
+  networking.interfaces.enp3s0.useDHCP = true;
 
-#   environment.systemPackages = with pkgs;
-#     [
-#       emacs
-#     ];
+  environment.systemPackages = with pkgs;
+    [
+      emacs
+    ];
 
-#   services.zfs = {
-#     autoScrub.enable = true;
-#     autoSnapshot.enable = true;
-#     # TODO: autoReplication
-#   };
+  services.zfs = {
+    autoScrub.enable = true;
+    autoSnapshot.enable = true;
+    # TODO: autoReplication
+  };
 
-#   services.openssh = {
-#     enable = true;
-#     permitRootLogin = "no";
-#     passwordAuthentication = false;
-#     hostKeys =
-#       [
-#         {
-#           path = "/persist/etc/ssh/ssh_host_ed25519_key";
-#           type = "ed25519";
-#         }
-#         {
-#           path = "/persist/etc/ssh/ssh_host_rsa_key";
-#           type = "rsa";
-#           bits = 4096;
-#         }
-#       ];
-#   };
+  services.openssh = {
+    enable = true;
+    permitRootLogin = "no";
+    passwordAuthentication = false;
+    hostKeys =
+      [
+        {
+          path = "/persist/etc/ssh/ssh_host_ed25519_key";
+          type = "ed25519";
+        }
+        {
+          path = "/persist/etc/ssh/ssh_host_rsa_key";
+          type = "rsa";
+          bits = 4096;
+        }
+      ];
+  };
 
-#   users = {
-#     mutableUsers = false;
-#     users = {
-#       root = {
-#         initialHashedPassword = "${ROOT_PASSWORD_HASH}";
-#       };
+  users = {
+    mutableUsers = false;
+    users = {
+      root = {
+        initialHashedPassword = "${ROOT_PASSWORD_HASH}";
+      };
 
-#       ${USER_NAME} = {
-#         createHome = true;
-# 	extraGroups = [ "wheel" ];
-# 	group = "users";
-# 	uid = 1000;
-# 	home = "/home/${USER_NAME}";
-# 	useDefaultShell = true;
-#         openssh.authorizedKeys.keys = [ "${AUTHORIZED_SSH_KEY}" ];
-#         isNormalUser = true;
-#       };
-#     };
-#   };
+      ${USER_NAME} = {
+        createHome = true;
+	extraGroups = [ "wheel" ];
+	group = "users";
+	uid = 1000;
+	home = "/home/${USER_NAME}";
+	useDefaultShell = true;
+        openssh.authorizedKeys.keys = [ "${AUTHORIZED_SSH_KEY}" ];
+        isNormalUser = true;
+      };
+    };
+  };
 
-#   # This value determines the NixOS release from which the default
-#   # settings for stateful data, like file locations and database versions
-#   # on your system were taken. It‘s perfectly fine and recommended to leave
-#   # this value at the release version of the first install of this system.
-#   # Before changing this value read the documentation for this option
-#   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
-#   system.stateVersion = "21.11"; # Did you read the comment?
+  # This value determines the NixOS release from which the default
+  # settings for stateful data, like file locations and database versions
+  # on your system were taken. It‘s perfectly fine and recommended to leave
+  # this value at the release version of the first install of this system.
+  # Before changing this value read the documentation for this option
+  # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
+  system.stateVersion = "21.11"; # Did you read the comment?
 
-# }
-# EOF
+}
+EOF
 
-# info "Installing NixOS to /mnt ..."
+info "Installing NixOS to /mnt ..."
 ln -s /mnt/persist/etc/nixos/configuration.nix /mnt/etc/nixos/configuration.nix
-info "Install with: nixos-install -I \"nixos-config=/mnt/persist/etc/nixos/configuration.nix\""
-# nixos-install -I "nixos-config=/mnt/persist/etc/nixos/configuration.nix" --no-root-passwd  # already prompted for and configured password
+# info "Install with: nixos-install -I \"nixos-config=/mnt/persist/etc/nixos/configuration.nix\""
+nixos-install -I "nixos-config=/mnt/persist/etc/nixos/configuration.nix" --no-root-passwd  # already prompted for and configured password
+
+# Need to export the pool after installing, otherwise NixOS will fail to mount the pool on reboot
+zpool export ${ZFS_POOL}
