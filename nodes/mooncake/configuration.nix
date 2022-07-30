@@ -29,6 +29,15 @@
     ACTION="add|change", KERNEL=="sd[a-z]*[0-9]*|mmcblk[0-9]*p[0-9]*|nvme[0-9]*n[0-9]*p[0-9]*", ENV{ID_FS_TYPE}=="zfs_member", ATTR{../queue/scheduler}="none"
   '';
 
+  nix = {
+    package = pkgs.nix_2_7;
+    extraOptions = ''
+      builders = @/etc/nix/machines
+      builders-use-substitutes = true
+      experimental-features = nix-command flakes
+    '';
+  };
+
   networking.hostName = "mooncake";
   networking.hostId = "584e8d50";
 
