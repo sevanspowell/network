@@ -5,6 +5,7 @@
 
   modules = [
     { _module.args.inputs = inputs; }
+    home-manager.nixosModule
     ./configuration.nix
     ./hardware-configuration.nix
   ];

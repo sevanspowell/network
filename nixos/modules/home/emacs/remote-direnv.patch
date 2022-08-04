@@ -1,0 +1,142 @@
+From 589de0975e408697bb1651b975e38bf69bf946f3 Mon Sep 17 00:00:00 2001
+From: Siddharth Verma <siddharthverma314@gmail.com>
+Date: Mon, 17 Aug 2020 14:37:15 -0700
+Subject: [PATCH 1/3] Added tramp support
+
+---
+ direnv.el | 19 ++++++++++++-------
+ 1 file changed, 12 insertions(+), 7 deletions(-)
+
+diff --git a/direnv.el b/direnv.el
+index 194fbde..c1a525e 100644
+--- a/direnv.el
++++ b/direnv.el
+@@ -31,7 +31,7 @@
+ 
+ (defun direnv--detect ()
+   "Detect the direnv executable."
+-  (executable-find "direnv"))
++  (executable-find "direnv" t))
+ 
+ (defvar direnv--output-buffer-name "*direnv*"
+   "Name of the buffer filled with the last direnv output.")
+@@ -102,8 +102,10 @@ use `default-directory', since there is no file name (or directory)."
+         (with-current-buffer (get-buffer-create direnv--output-buffer-name)
+           (erase-buffer)
+           (let* ((default-directory directory)
+-                 (process-environment environment)
+-                 (exit-code (call-process
++                 (process-environment (if (file-remote-p default-directory)
++					  tramp-remote-process-environment
++					environment))
++                 (exit-code (process-file
+                              direnv--executable nil
+                              `(t ,stderr-tempfile) nil
+                              "export" "json")))
+@@ -243,8 +245,6 @@ When FORCE-SUMMARY is non-nil or when called interactively, show a summary messa
+         (items)
+         (summary)
+         (show-summary (or force-summary (called-interactively-p 'interactive))))
+-    (when (file-remote-p directory)
+-      (user-error "Cannot use direnv for remote files"))
+     (setq direnv--active-directory directory
+           items (direnv--export direnv--active-directory)
+           summary (direnv--summarise-changes items))
+@@ -254,8 +254,13 @@ When FORCE-SUMMARY is non-nil or when called interactively, show a summary messa
+       (direnv--show-summary summary old-directory direnv--active-directory))
+     (dolist (pair items)
+       (let ((name (car pair))
+-            (value (cdr pair)))
++            (value (cdr pair))
++	    (process-environment (if (file-remote-p directory)
++				     tramp-remote-process-environment
++				   process-environment)))
+         (setenv name value)
++	(when (file-remote-p directory)
++	  (setq tramp-remote-process-environment process-environment))
+         (when (string-equal name "PATH")
+           (setq exec-path (append (parse-colon-path value) (list exec-directory)))
+           ;; Prevent `eshell-path-env` getting out-of-sync with $PATH:
+@@ -266,7 +271,7 @@ When FORCE-SUMMARY is non-nil or when called interactively, show a summary messa
+ (defun direnv-allow ()
+   "Run ‘direnv allow’ and update the environment afterwards."
+   (interactive)
+-  (call-process (direnv--detect) nil 0 nil "allow")
++  (process-file (direnv--detect) nil 0 nil "allow")
+   (direnv-update-environment))
+ 
+ ;;;###autoload
+
+From 02df1e10fcd74ec1727210a6e083652b2dfb6ee5 Mon Sep 17 00:00:00 2001
+From: Siddharth Verma <siddharthverma314@gmail.com>
+Date: Mon, 17 Aug 2020 16:27:29 -0700
+Subject: [PATCH 2/3] Allow changing between tramp and non-tramp buffers
+
+---
+ direnv.el | 17 ++++++-----------
+ 1 file changed, 6 insertions(+), 11 deletions(-)
+
+diff --git a/direnv.el b/direnv.el
+index c1a525e..75dfe45 100644
+--- a/direnv.el
++++ b/direnv.el
+@@ -36,9 +36,6 @@
+ (defvar direnv--output-buffer-name "*direnv*"
+   "Name of the buffer filled with the last direnv output.")
+ 
+-(defvar direnv--executable (direnv--detect)
+-  "Detected path of the direnv executable.")
+-
+ (defvar direnv--active-directory nil
+   "Name of the directory for which direnv has most recently ran.")
+ 
+@@ -92,10 +89,6 @@ use `default-directory', since there is no file name (or directory)."
+ 
+ (defun direnv--export (directory)
+   "Call direnv for DIRECTORY and return the parsed result."
+-  (unless direnv--executable
+-    (setq direnv--executable (direnv--detect)))
+-  (unless direnv--executable
+-    (user-error "Could not find the direnv executable. Is ‘exec-path’ correct?"))
+   (let ((environment process-environment)
+         (stderr-tempfile (make-temp-file "direnv-stderr"))) ;; call-process needs a file for stderr output
+     (unwind-protect
+@@ -105,10 +98,12 @@ use `default-directory', since there is no file name (or directory)."
+                  (process-environment (if (file-remote-p default-directory)
+ 					  tramp-remote-process-environment
+ 					environment))
+-                 (exit-code (process-file
+-                             direnv--executable nil
+-                             `(t ,stderr-tempfile) nil
+-                             "export" "json")))
++		 (direnv--executable (direnv--detect))
++                 (exit-code (if (null direnv--executable)
++				-1
++			      (process-file direnv--executable nil
++					    `(t ,stderr-tempfile) nil
++					    "export" "json"))))
+             (prog1
+                 (unless (zerop (buffer-size))
+                   (goto-char (point-max))
+
+From 74b6fd8a15650b98a94eb9ee6f9d58ac28ab3561 Mon Sep 17 00:00:00 2001
+From: Siddharth Verma <siddharthverma314@gmail.com>
+Date: Mon, 7 Dec 2020 01:18:12 -0800
+Subject: [PATCH 3/3] fix maybe-update
+
+---
+ direnv.el | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/direnv.el b/direnv.el
+index 75dfe45..b40f88b 100644
+--- a/direnv.el
++++ b/direnv.el
+@@ -148,7 +148,6 @@ use `default-directory', since there is no file name (or directory)."
+   (with-current-buffer (window-buffer)
+     (let ((directory-name (direnv--directory)))
+       (when (and directory-name
+-                 (not (file-remote-p directory-name))
+                  (not (string-equal direnv--active-directory directory-name))
+                  (file-directory-p directory-name))
+         (direnv-update-directory-environment directory-name)))))

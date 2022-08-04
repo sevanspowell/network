@@ -123,6 +123,10 @@
           publicKey = "jCC29+Wpanv5kfx7sJqVnzOP5ToWc7FBgO1bJYcJqDY=";
           allowedIPs = [ "10.100.0.2/32" ];
         }
+        {
+          publicKey = "qA6CoFU3os/v87e2PyYlAk6CpB/Rurk6v9F4/uOKc1U=";
+          allowedIPs = [ "10.100.0.3/32" ];
+        }
       ];
     };
   };
@@ -145,6 +149,12 @@
       orchid.home {
         template IN A {
           answer "{{ .Name }} 0 IN A 10.100.0.2"
+        }
+      }
+
+      mooncake.home {
+        template IN A {
+          answer "{{ .Name }} 0 IN A 10.100.0.3"
         }
       }
     '';

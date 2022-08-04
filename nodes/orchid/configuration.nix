@@ -360,10 +360,9 @@ in
           endpoint = "194.195.122.100:51820";
         }
         {
-          publicKey = "";
+          publicKey = "qA6CoFU3os/v87e2PyYlAk6CpB/Rurk6v9F4/uOKc1U=";
           allowedIPs = [ "10.100.0.3/32" ];
-          persistentKeepalive = 25;
-          endpoint = "194.195.122.100:51820";
+          endpoint = "159.196.88.245:51820";
         }
       ];
     };
