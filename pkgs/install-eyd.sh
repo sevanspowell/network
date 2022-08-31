@@ -33,6 +33,7 @@ function info {
 
 ################################################################################
 
+export DISK_PATH=$1
 export AUTHORIZED_SSH_KEY=$2
 
 if ! [[ -v DISK_PATH ]]; then
@@ -211,11 +212,13 @@ cat <<EOF > /mnt/persist/etc/nixos/configuration.nix
   networking.hostId = "$(head -c 8 /etc/machine-id)";
 
   networking.useDHCP = false;
-  networking.interfaces.enp3s0.useDHCP = true;
+  # networking.interfaces.enp3s0.useDHCP = true;
 
   environment.systemPackages = with pkgs;
     [
       emacs
+      vim
+      git
     ];
 
   services.zfs = {
@@ -258,9 +261,14 @@ cat <<EOF > /mnt/persist/etc/nixos/configuration.nix
 	useDefaultShell = true;
         openssh.authorizedKeys.keys = [ "${AUTHORIZED_SSH_KEY}" ];
         isNormalUser = true;
+        initialHashedPassword = "${USER_PASSWORD_HASH}";
       };
     };
   };
+
+  systemd.tmpfiles.rules = [
+    "L+ /etc/machine-id - - - - /persist/etc/machine-id"
+  ];
 
   # This value determines the NixOS release from which the default
   # settings for stateful data, like file locations and database versions
@@ -269,12 +277,12 @@ cat <<EOF > /mnt/persist/etc/nixos/configuration.nix
   # Before changing this value read the documentation for this option
   # (e.g. man configuration.nix or on https://nixos.org/nixos/options.html).
   system.stateVersion = "21.11"; # Did you read the comment?
-
 }
 EOF
 
 info "Installing NixOS to /mnt ..."
 ln -s /mnt/persist/etc/nixos/configuration.nix /mnt/etc/nixos/configuration.nix
+ln -s /mnt/persist/etc/machine-id /mnt/etc/machine-id
 # info "Install with: nixos-install -I \"nixos-config=/mnt/persist/etc/nixos/configuration.nix\""
 nixos-install -I "nixos-config=/mnt/persist/etc/nixos/configuration.nix" --no-root-passwd  # already prompted for and configured password
 
