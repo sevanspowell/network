@@ -821,6 +821,12 @@ Load nix-managed emacs packages:
   (use-package lsp-mode
     :init
        (setq lsp-keymap-prefix nil)
+       (general-define-key
+        :states '(normal motion)
+        :keymaps 'lsp-mode-map
+        :prefix ","
+        "l" lsp-command-map
+        )
     :hook ((haskell-mode . lsp-deferred)
            (haskell-literate-mode . lsp-deferred)
            (lsp-mode . lsp-enable-which-key-integration)
@@ -829,12 +835,6 @@ Load nix-managed emacs packages:
       (add-hook 'hack-local-variables-hook (lambda () (when lsp-mode (lsp))))
       (setq-default lsp-headerline-breadcrumb-enable nil)
     :custom
-       (general-define-key
-        :states '(normal motion)
-        :keymaps 'lsp-mode-map
-        :prefix ","
-        "l" lsp-command-map
-        )
       (lsp-eldoc-render-all nil)
       (lsp-signature-auto-activate nil)
       (lsp-signature-doc-lines 20)
