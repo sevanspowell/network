@@ -52,6 +52,7 @@
       orchid = nixosSystem (import ./nodes/orchid inputs);
       server = nixosSystem (import ./nodes/server inputs);
       mooncake = nixosSystem (import ./nodes/mooncake inputs);
+      client = nixosSystem (import ./nodes/client inputs);
       install-eyd = nixosSystem (import ./images/install-eyd inputs);
     };
 
@@ -82,6 +83,14 @@
         profiles.system.path =
           deploy.lib.x86_64-linux.activate.nixos
             self.nixosConfigurations."mooncake";
+      };
+
+      client = {
+        hostname = "10.100.0.4:22";
+        fastConnection = true;
+        profiles.system.path =
+          deploy.lib.aarch64-linux.activate.nixos
+            self.nixosConfigurations."client";
       };
     };
   };
