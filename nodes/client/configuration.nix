@@ -19,6 +19,8 @@ in
     ../../nixos/modules/vmware-guest.nix
   ];
 
+  virtualisation.vmware2.guest.enable = true;
+
   nix.nixPath = [
     "nixpkgs=/nix/var/nix/profiles/per-user/root/channels/nixos"
     "/nix/var/nix/profiles/per-user/root/channels"
