@@ -16,6 +16,7 @@ in
     # ../../nixos/modules/direnv
     ../../nixos/modules/yubikey-gpg
     ../../nixos/modules/weechat
+    ../../nixos/modules/vmware-guest.nix
   ];
 
   nix.nixPath = [
