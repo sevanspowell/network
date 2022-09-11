@@ -1,6 +1,11 @@
 { config, pkgs, lib, ... }:
 
 {
+  imports =
+    [
+      ./hardware-configuration.nix
+    ];
+
   nix.nixPath =
     [
       "nixpkgs=/nix/var/nix/profiles/per-user/root/channels/nixos"
@@ -25,11 +30,14 @@
     ACTION="add|change", KERNEL=="sd[a-z]*[0-9]*|mmcblk[0-9]*p[0-9]*|nvme[0-9]*n[0-9]*p[0-9]*", ENV{ID_FS_TYPE}=="zfs_member", ATTR{../queue/scheduler}="none"
   '';
 
+  networking.hostId = "4eced986";
+
   networking.useDHCP = false;
-  networking.interfaces.ens160.useDHCP = true;
+  # networking.interfaces.enp3s0.useDHCP = true;
 
   environment.systemPackages = with pkgs;
     [
+      emacs
       vim
       git
     ];
@@ -56,6 +64,27 @@
           bits = 4096;
         }
       ];
+  };
+
+  users = {
+    mutableUsers = false;
+    users = {
+      root = {
+        initialHashedPassword = "\$6\$OIyU7EGc/fS8bXtR\$GzC/UjZeux0j2pV2/m6W.LIPYUg6VQMYplS8EaAzZhpgvAEjF1QdR4EYWDCsokY8DFi9La5IkWut1mGux99QE0";
+      };
+
+      dev = {
+        createHome = true;
+	extraGroups = [ "wheel" ];
+	group = "users";
+	uid = 1000;
+	home = "/home/dev";
+	useDefaultShell = true;
+        openssh.authorizedKeys.keys = [ "ssh-ed25519" ];
+        isNormalUser = true;
+        initialHashedPassword = "\$6\$v8973Kad7umMUV0e\$VPLTBLbEY26Q2Wq.R0.9wmKnE.THhJyb0HV6cEXTkFzFMh8MoTbYkuU.fq.MlaPyyjT.XEbhLJF5U0IOBwdVN1";
+      };
+    };
   };
 
   systemd.tmpfiles.rules = [

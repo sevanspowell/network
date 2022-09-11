@@ -10,5 +10,6 @@
     ./configuration.nix
     ./hardware-configuration.nix
     ./base.nix
+    ./base2.nix
   ];
 }
