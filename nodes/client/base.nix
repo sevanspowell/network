@@ -61,6 +61,8 @@
   systemd.tmpfiles.rules = [
     "L+ /etc/machine-id - - - - /persist/etc/machine-id"
     "d /home/dev 750 dev users - -"
+    "d /home/dev/.gnupg 750 dev users - -"
+    "L+ /home/dev/.gnupg/pubring.kbx - - - - /persist/home/dev/.gnupg/pubring.kbx"
   ];
 
   # This value determines the NixOS release from which the default

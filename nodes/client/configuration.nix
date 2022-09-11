@@ -245,5 +245,5 @@ in
     };
   };
 
-  networking.nameservers = [ "10.100.0.1" ];
+  #networking.nameservers = [ "10.100.0.1" ];
 }
