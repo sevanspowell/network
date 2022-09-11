@@ -2,17 +2,21 @@
 
 ## Build configurations
 
+```
 nix build .#nixosConfigurations.orchid.config.system.build.toplevel
 nix build .#nixosConfigurations.server.config.system.build.vm
 nix build .#nixosConfigurations.install-eyd.config.system.build.isoImage
+```
 
 ## Deploy
 
+```
 nix develop
 deploy .#orchid
 
-nixos-rebuild --flake .#orchid
 nixos-install --flake .#orchid
+nixos-rebuild --flake .#orchid switch
+```
 
 ## Sops
 
@@ -27,3 +31,7 @@ nixos-install --flake .#orchid
       - pgp:
         - *admin_sam
   ```
+
+## VMWare Setup
+
+https://support.yubico.com/hc/en-us/articles/360013647640-Troubleshooting-Device-Passthrough-with-VMware-Workstation-and-VMware-Fusion
