@@ -5,7 +5,9 @@
 { modulesPath, config, pkgs, lib, inputs, ... }:
 
 let
-  nix-ll = inputs.self.packages.aarch64-linux.nix-ll;
+  nix-ll = inputs.self.packages."${pkgs.system}".nix-ll;
+
+  emacs-overlay = inputs.emacs-overlay.overlay;
 in
 
 {
@@ -28,12 +30,17 @@ in
   home-manager.useGlobalPkgs = true;
   home-manager.useUserPackages = true;
 
+  nixpkgs.overlays = [
+    emacs-overlay
+    (import ../../nixos/modules/home/emacs/emacs.nix)
+  ];
+
   home-manager.users.dev = {...}: {
 
     home.stateVersion = "21.11";
 
     imports = [
-      # ../../nixos/modules/home/emacs
+      ../../nixos/modules/home/emacs
       ../../nixos/modules/home/xmobar
       ../../nixos/modules/home/xmonad
       ../../nixos/modules/home/xresources

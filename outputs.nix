@@ -4,22 +4,26 @@
 , sops-nix
 , deploy
 , haskellNix
+, emacs-overlay
 , ...
 } @ inputs:
 
 (flake-utils.lib.eachDefaultSystem (system:
   let
-    pkgs = nixpkgs.legacyPackages."${system}";
-
     overlays = [
       haskellNix.overlay
+      emacs-overlay.overlay
     ];
-  in
-  {
+
     legacyPackages = import nixpkgs {
       inherit system overlays;
       inherit (haskellNix) config;
     };
+
+    pkgs = legacyPackages;
+  in
+  {
+    inherit legacyPackages;
 
     packages = {
       linode-cli = pkgs.python3Packages.callPackage ./pkgs/linode-cli.nix {};
