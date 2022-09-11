@@ -23,6 +23,8 @@ in
     ../../nixos/modules/weechat
   ];
 
+  boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
+
   nix.nixPath = [
     "nixpkgs=/nix/var/nix/profiles/per-user/root/channels/nixos"
     "/nix/var/nix/profiles/per-user/root/channels"
@@ -177,6 +179,7 @@ in
     enable = true;
     enableTCPIP = false;
     settings = {
+      log_statement = "all";
       max_connections = 200;
       shared_buffers = "2GB";
       effective_cache_size = "6GB";
