@@ -11,6 +11,9 @@ nix build .#nixosConfigurations.install-eyd.config.system.build.isoImage
 nix develop
 deploy .#orchid
 
+nixos-rebuild --flake .#orchid
+nixos-install --flake .#orchid
+
 ## Sops
 
 - Get PGP key fingerprint `gpg --list-secret-keys`
