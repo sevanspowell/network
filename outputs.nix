@@ -29,6 +29,7 @@
       linode-cli = pkgs.python3Packages.callPackage ./pkgs/linode-cli.nix {};
       nix-ll = pkgs.callPackage ./pkgs/nix-ll.nix {};
       install-eyd = pkgs.callPackage ./pkgs/install-eyd.nix {};
+      install-eyd-iso = (nixpkgs.lib.nixosSystem (import ./images/install-eyd system inputs)).config.system.build.isoImage;
     };
 
     devShell = pkgs.mkShell {
@@ -57,7 +58,7 @@
       server = nixosSystem (import ./nodes/server inputs);
       mooncake = nixosSystem (import ./nodes/mooncake inputs);
       client = nixosSystem (import ./nodes/client inputs);
-      install-eyd = nixosSystem (import ./images/install-eyd inputs);
+      # install-eyd = nixosSystem (import ./images/install-eyd inputs);
     };
 
   deploy = {

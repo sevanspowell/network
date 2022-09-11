@@ -1,7 +1,7 @@
-{ nixpkgs, ... } @ inputs:
+system: { nixpkgs, ... } @ inputs:
 
 {
-  system = "x86_64-linux";
+  inherit system;
 
   modules = [
     { _module.args.inputs = inputs; }
