@@ -62,14 +62,15 @@ export ZFS_POOL="rpool"
 export ZFS_LOCAL="${ZFS_POOL}/local"
 export ZFS_DS_ROOT="${ZFS_LOCAL}/root"
 export ZFS_DS_NIX="${ZFS_LOCAL}/nix"
+export ZFS_DS_HOME="${ZFS_LOCAL}/home"
 export ZFS_DS_RESERVED="${ZFS_POOL}/reserved"
 
 # persistent datasets
 export ZFS_SAFE="${ZFS_POOL}/safe"
-export ZFS_DS_HOME="${ZFS_SAFE}/home"
 export ZFS_DS_PERSIST="${ZFS_SAFE}/persist"
 
-export ZFS_BLANK_SNAPSHOT="${ZFS_DS_ROOT}@blank"
+export ZFS_BLANK_SNAPSHOT_ROOT="${ZFS_DS_ROOT}@blank"
+export ZFS_BLANK_SNAPSHOT_HOME="${ZFS_DS_HOME}@blank"
 
 ################################################################################
 
@@ -83,6 +84,9 @@ parted "$DISK_PATH" -- set 3 esp on
 export DISK_PART_ROOT="${DISK_PATH}-part1"
 export DISK_PART_BOOT="${DISK_PATH}-part3"
 export DISK_PART_SWAP="${DISK_PATH}-part2"
+
+info "Syncing partitions ..."
+partprobe
 
 info "Formatting boot partition ..."
 mkfs.fat -F 32 -n boot "$DISK_PART_BOOT"
@@ -109,8 +113,8 @@ zfs set xattr=sa "$ZFS_DS_ROOT"
 info "Configuring access control list setting for '$ZFS_DS_ROOT' ZFS dataset ..."
 zfs set acltype=posixacl "$ZFS_DS_ROOT"
 
-info "Creating '$ZFS_BLANK_SNAPSHOT' ZFS snapshot ..."
-zfs snapshot "$ZFS_BLANK_SNAPSHOT"
+info "Creating '$ZFS_BLANK_SNAPSHOT_ROOT' ZFS snapshot ..."
+zfs snapshot "$ZFS_BLANK_SNAPSHOT_ROOT"
 
 info "Mounting '$ZFS_DS_ROOT' to /mnt ..."
 mount -t zfs "$ZFS_DS_ROOT" /mnt
@@ -135,6 +139,9 @@ mount -t zfs "$ZFS_DS_NIX" /mnt/nix
 info "Creating '$ZFS_DS_HOME' ZFS dataset ..."
 zfs create -p -o mountpoint=legacy "$ZFS_DS_HOME"
 
+info "Creating '$ZFS_BLANK_SNAPSHOT_HOME' ZFS snapshot ..."
+zfs snapshot "$ZFS_BLANK_SNAPSHOT_HOME"
+
 info "Mounting '$ZFS_DS_HOME' to /mnt/home ..."
 mkdir /mnt/home
 mount -t zfs "$ZFS_DS_HOME" /mnt/home
@@ -147,7 +154,6 @@ mkdir /mnt/persist
 mount -t zfs "$ZFS_DS_PERSIST" /mnt/persist
 
 info "Permit ZFS auto-snapshots on ${ZFS_SAFE}/* datasets ..."
-zfs set com.sun:auto-snapshot=true "$ZFS_DS_HOME"
 zfs set com.sun:auto-snapshot=true "$ZFS_DS_PERSIST"
 
 info "Creating persistent directory for host SSH keys ..."
@@ -200,7 +206,8 @@ cat <<EOF > /mnt/persist/etc/nixos/configuration.nix
 
   # source: https://grahamc.com/blog/erase-your-darlings
   boot.initrd.postDeviceCommands = lib.mkAfter ''
-    zfs rollback -r ${ZFS_BLANK_SNAPSHOT}
+    zfs rollback -r ${ZFS_BLANK_SNAPSHOT_ROOT}
+    zfs rollback -r ${ZFS_BLANK_SNAPSHOT_HOME}
   '';
 
   # Set noop scheduler for zfs partitions
@@ -213,6 +220,13 @@ cat <<EOF > /mnt/persist/etc/nixos/configuration.nix
 
   networking.useDHCP = false;
   # networking.interfaces.enp3s0.useDHCP = true;
+
+  nix = {
+    package = pkgs.nix_2_7;
+    extraOptions = ''
+      experimental-features = nix-command flakes
+    '';
+  };
 
   environment.systemPackages = with pkgs;
     [
@@ -268,6 +282,7 @@ cat <<EOF > /mnt/persist/etc/nixos/configuration.nix
 
   systemd.tmpfiles.rules = [
     "L+ /etc/machine-id - - - - /persist/etc/machine-id"
+    "d /home/dev 750 dev users - -"
   ];
 
   # This value determines the NixOS release from which the default
