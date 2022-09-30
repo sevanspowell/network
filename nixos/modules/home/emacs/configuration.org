@@ -543,8 +543,17 @@ Disable menu, scroll bar:
   (setq-default word-wrap t)
 #+END_SRC
 
-Intelligently trim whitespace:
+Deal with long lines:
 #+BEGIN_SRC emacs-lisp
+  (setq-default bidi-paragraph-direction 'left-to-right)
+  (if (version<= "27.1" emacs-version)
+      (setq bidi-inhibit-bpa t))
+  (if (version<= "27.1" emacs-version)
+      (global-so-long-mode 1))
+#+END_SRC
+
+Intelligently trim whitespace:
+,#+BEGIN_SRC emacs-lisp
   (use-package ws-butler
     :ensure t
     :config

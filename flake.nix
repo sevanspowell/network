@@ -17,6 +17,7 @@
     sops-nix.inputs.nixpkgs.follows = "nixpkgs";
     sops-nix.url = "github:Mic92/sops-nix";
     emacs-overlay.url = "github:nix-community/emacs-overlay";
-  };
+  }
+;
   outputs = { ... } @ args: import ./outputs.nix args;
 }

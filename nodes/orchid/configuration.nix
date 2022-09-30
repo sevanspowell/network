@@ -12,6 +12,7 @@ let
 
   nix-ll = inputs.self.packages.x86_64-linux.nix-ll;
 
+  emacs-overlay = inputs.emacs-overlay.overlay;
 in
 
 {
@@ -29,6 +30,14 @@ in
     "nixpkgs=/nix/var/nix/profiles/per-user/root/channels/nixos"
     "/nix/var/nix/profiles/per-user/root/channels"
     "nixos-config=/srv/network/nodes/${config.networking.hostName}/default.nix"
+  ];
+
+  home-manager.useGlobalPkgs = true;
+  home-manager.useUserPackages = true;
+
+  nixpkgs.overlays = [
+    emacs-overlay
+    (import ../../nixos/modules/home/emacs/emacs.nix)
   ];
 
   home-manager.users.sam = {...}: {
@@ -83,10 +92,11 @@ in
     cardano-cli
     cardano-node
     cabal-install
+    chromium
     cabal2nix
-    # chromium
     cntr
     # dhcpcd
+    teams
     docker
     docker-compose
     dmenu
@@ -153,92 +163,92 @@ in
   # Enable the OpenSSH daemon.
   services.openssh.enable = true;
 
-  services.cardano-node = {
-    environment = "mainnet";
-    enable = false;
-    port = 3001;
-    systemdSocketActivation = true;
-  };
+  # services.cardano-node = {
+  #   environment = "mainnet";
+  #   enable = false;
+  #   port = 3001;
+  #   systemdSocketActivation = true;
+  # };
 
-  services.cardano-db-sync = {
-    enable = false;
-    postgres = {
-      database = "cexplorer";
-      user = "cardano-node";
-    };
-    user = "cardano-node";
-    cluster = "mainnet";
-    extended = true;
-    # environment = (import sources.iohk-nix {}).cardanoLib.environments.testnet;
-    socketPath = config.services.cardano-node.socketPath;
-  };
+  # services.cardano-db-sync = {
+  #   enable = false;
+  #   postgres = {
+  #     database = "cexplorer";
+  #     user = "cardano-node";
+  #   };
+  #   user = "cardano-node";
+  #   cluster = "mainnet";
+  #   extended = true;
+  #   # environment = (import sources.iohk-nix {}).cardanoLib.environments.testnet;
+  #   socketPath = config.services.cardano-node.socketPath;
+  # };
 
   hardware.keyboard.zsa.enable = true;
 
-  services.postgresql = {
-    enable = true;
-    enableTCPIP = false;
-    settings = {
-      log_statement = "all";
-      max_connections = 200;
-      shared_buffers = "2GB";
-      effective_cache_size = "6GB";
-      maintenance_work_mem = "512MB";
-      checkpoint_completion_target = 0.7;
-      wal_buffers = "16MB";
-      default_statistics_target = 100;
-      random_page_cost = 1.1;
-      effective_io_concurrency = 200;
-      work_mem = "10485kB";
-      min_wal_size = "1GB";
-      max_wal_size = "2GB";
-    };
-    identMap = ''
-      explorer-users root cardano-node
-      explorer-users postgres postgres
-      explorer-users sam cardano-node
-      explorer-users cardano-node cexplorer
-      explorer-users cardano-node cardano-node
-      explorer-users root cexplorer
-      explorer-users sam cexplorer
-      explorer-users cexplorer cexplorer
-    '';
-    authentication = ''
-      local all all ident map=explorer-users
-      local all all trust
-    '';
-    ensureDatabases = [
-      "explorer_python_api"
-      "cexplorer"
-      "hdb_catalog"
-    ];
-    ensureUsers = [
-      {
-        name = "cardano-node";
-        ensurePermissions = {
-          "DATABASE explorer_python_api" = "ALL PRIVILEGES";
-          "DATABASE cexplorer" = "ALL PRIVILEGES";
-          "DATABASE hdb_catalog" = "ALL PRIVILEGES";
-          "ALL TABLES IN SCHEMA public" = "ALL PRIVILEGES";
-        };
-      }
-      {
-        name = "cexplorer";
-        ensurePermissions = {
-          "DATABASE cexplorer" = "ALL PRIVILEGES";
-          "ALL TABLES IN SCHEMA information_schema" = "SELECT";
-          "ALL TABLES IN SCHEMA pg_catalog" = "SELECT";
-        };
-      }
-    ];
-    initialScript = pkgs.writeText "init.sql" ''
-      CREATE USER sam WITH SUPERUSER;
-      CREATE USER cexplorer WITH SUPERUSER;
-      CREATE USER cardano-node WITH SUPERUSER;
-      CREATE USER root WITH SUPERUSER;
-      CREATE DATABASE sam WITH OWNER sam;
-    '';
-  };
+  # services.postgresql = {
+  #   enable = true;
+  #   enableTCPIP = false;
+  #   settings = {
+  #     log_statement = "all";
+  #     max_connections = 200;
+  #     shared_buffers = "2GB";
+  #     effective_cache_size = "6GB";
+  #     maintenance_work_mem = "512MB";
+  #     checkpoint_completion_target = 0.7;
+  #     wal_buffers = "16MB";
+  #     default_statistics_target = 100;
+  #     random_page_cost = 1.1;
+  #     effective_io_concurrency = 200;
+  #     work_mem = "10485kB";
+  #     min_wal_size = "1GB";
+  #     max_wal_size = "2GB";
+  #   };
+  #   identMap = ''
+  #     explorer-users root cardano-node
+  #     explorer-users postgres postgres
+  #     explorer-users sam cardano-node
+  #     explorer-users cardano-node cexplorer
+  #     explorer-users cardano-node cardano-node
+  #     explorer-users root cexplorer
+  #     explorer-users sam cexplorer
+  #     explorer-users cexplorer cexplorer
+  #   '';
+  #   authentication = ''
+  #     local all all ident map=explorer-users
+  #     local all all trust
+  #   '';
+  #   ensureDatabases = [
+  #     "explorer_python_api"
+  #     "cexplorer"
+  #     "hdb_catalog"
+  #   ];
+  #   ensureUsers = [
+  #     {
+  #       name = "cardano-node";
+  #       ensurePermissions = {
+  #         "DATABASE explorer_python_api" = "ALL PRIVILEGES";
+  #         "DATABASE cexplorer" = "ALL PRIVILEGES";
+  #         "DATABASE hdb_catalog" = "ALL PRIVILEGES";
+  #         "ALL TABLES IN SCHEMA public" = "ALL PRIVILEGES";
+  #       };
+  #     }
+  #     {
+  #       name = "cexplorer";
+  #       ensurePermissions = {
+  #         "DATABASE cexplorer" = "ALL PRIVILEGES";
+  #         "ALL TABLES IN SCHEMA information_schema" = "SELECT";
+  #         "ALL TABLES IN SCHEMA pg_catalog" = "SELECT";
+  #       };
+  #     }
+  #   ];
+  #   initialScript = pkgs.writeText "init.sql" ''
+  #     CREATE USER sam WITH SUPERUSER;
+  #     CREATE USER cexplorer WITH SUPERUSER;
+  #     CREATE USER cardano-node WITH SUPERUSER;
+  #     CREATE USER root WITH SUPERUSER;
+  #     CREATE DATABASE sam WITH OWNER sam;
+  #   '';
+  # };
 
   virtualisation.docker.enable = true;
   virtualisation.docker.enableOnBoot = true;
