@@ -6,10 +6,10 @@
     cardano-node.url = "github:input-output-hk/cardano-node?ref=refs/tags/1.35.2";
     deploy.url = "github:input-output-hk/deploy-rs";
     flake-utils.url = "github:numtide/flake-utils";
-    home-manager.url = "github:nix-community/home-manager/release-21.11";
+    home-manager.url = "github:nix-community/home-manager";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
     nix.url = "github:NixOS/nix/master";
-    nixpkgs.follows = "haskellNix/nixpkgs-2111";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     haskellNix = {
       url = "github:input-output-hk/haskell.nix";
       inputs.nixpkgs.follows = "nixpkgs";

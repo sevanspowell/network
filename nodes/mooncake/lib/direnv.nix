@@ -38,7 +38,7 @@ in
       lib.nameValuePair "${user}" {
         programs.direnv.enable = true;
         programs.direnv.nix-direnv.enable = true;
-        programs.direnv.nix-direnv.enableFlakes = true;
+        # programs.direnv.nix-direnv.enableFlakes = true;
       }
     ) cfg.users);
 

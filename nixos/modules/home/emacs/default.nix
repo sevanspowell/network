@@ -15,7 +15,7 @@ let
     alwaysTangle = true;
     override = epkgs: epkgs // {
       direnv = epkgs.melpaPackages.direnv.overrideAttrs(old: {
-        patches = [ ./remote-direnv.patch ];
+        # patches = [ ./remote-direnv.patch ];
       });
     };
   };

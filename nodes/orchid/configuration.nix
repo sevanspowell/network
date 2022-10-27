@@ -21,7 +21,7 @@ in
     # ../../nixos/modules/copy-network-repo.nix
     ../../nixos/modules/direnv
     ../../nixos/modules/yubikey-gpg
-    ../../nixos/modules/weechat
+    # ../../nixos/modules/weechat
   ];
 
   boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
@@ -37,7 +37,6 @@ in
 
   nixpkgs.overlays = [
     emacs-overlay
-    (import ../../nixos/modules/home/emacs/emacs.nix)
   ];
 
   home-manager.users.sam = {...}: {
@@ -105,7 +104,6 @@ in
     ghc
     go-jira
     git
-    linode-cli
     nix-ll
     gnumake
     ledger
@@ -130,9 +128,10 @@ in
     unzip
     vim
     wally-cli
+    wireshark
     wget
     (wine.override { mingwSupport = true; wineBuild = "wine64"; })
-    wireguard
+    wireguard-tools
     xscreensaver
     zathura
   ]) ++
@@ -287,7 +286,7 @@ in
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.extraUsers.sam = {
     createHome = true;
-    extraGroups = ["wheel" "video" "audio" "disk" "networkmanager" "docker" "libvirtd" "dialout" "plugdev" ];
+    extraGroups = ["wheel" "video" "audio" "disk" "networkmanager" "docker" "libvirtd" "dialout" "plugdev" "wireshark" ];
     group = "users";
     home = "/home/sam";
     isNormalUser = true;
@@ -308,13 +307,13 @@ in
   # virtualisation.virtualbox.host.enable = true;
   users.extraGroups.vboxusers.members = [ "sam" ];
 
-  nix.binaryCaches = [
+  nix.settings.substituters = [
     "https://sevanspowell-personal.cachix.org"
     "https://cache.nixos.org"
     "https://iohk.cachix.org"
     "https://cache.iog.io"
   ];
-  nix.binaryCachePublicKeys = [
+  nix.settings.trusted-public-keys = [
     "sevanspowell-personal.cachix.org-1:VOY8b19A+HGl1xUof+ucLFTDRCYBhjv+q94rxt5t5Bk="
     "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
     "iohk.cachix.org-1:DpRUyj7h7V830dp/i6Nti+NEO2/nhblbov/8MW7Rqoo="
@@ -330,17 +329,19 @@ in
       }
     ];
 
-  nix.buildCores = 2;
-  nix.maxJobs = 4;
+  nix.settings.cores = 2;
+  nix.settings.max-jobs = 4;
 
   nix = {
-    package = pkgs.nix_2_7;
+    # package = pkgs.nix_2_7;
     extraOptions = ''
       builders = @/etc/nix/machines
       builders-use-substitutes = true
       experimental-features = nix-command flakes
     '';
   };
+
+  nix.settings.trusted-users = [ "root" "sam" "samuelbennett" ];
 
   nixpkgs.config.allowUnfree = true;
 

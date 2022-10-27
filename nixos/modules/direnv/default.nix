@@ -17,7 +17,7 @@
   home-manager.users.sam = {...}: {
     programs.direnv.enable = true;
     programs.direnv.nix-direnv.enable = true;
-    programs.direnv.nix-direnv.enableFlakes = true;
+    # programs.direnv.nix-direnv.enableFlakes = true;
   };
 
   nix.extraOptions = ''
