@@ -523,6 +523,8 @@ Bootstrap
 
     "'" 'vterm
     "s'" 'launch-vterm-scratch
+
+    "tc" 'titlecase-dwim
   )
 #+END_SRC
 
@@ -574,6 +576,10 @@ Link to JIRA tickets:
           (setq bug-reference-url-format #'my-jira-url)
   :hook (org-mode . bug-reference-mode)
         (prog-mode . bug-reference-prog-mode))
+
+(use-package titlecase
+  :ensure t
+)
 #+END_SRC
 
 *** Backups
