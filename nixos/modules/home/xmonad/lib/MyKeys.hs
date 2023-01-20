@@ -12,7 +12,7 @@ removedKeys :: XConfig l -> [(KeyMask, KeySym)]
 removedKeys _ = []
 
 addedKeys :: XConfig l -> [((KeyMask, KeySym), X ())]
-addedKeys conf @ (XConfig { XMonad.modMask = modMask }) = [
+addedKeys conf@(XConfig { XMonad.modMask = modMask }) = [
               -- Terminal
               ((modMask, xK_Return), spawn $ XMonad.terminal conf)
 
