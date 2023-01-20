@@ -158,6 +158,9 @@ in
 
   # List services that you want to enable:
   services.sshd.enable = true;
+  programs.ssh.extraConfig = ''
+  KexAlgorithms -sntrup761x25519-sha512@openssh.com
+  '';
 
   # Enable the OpenSSH daemon.
   services.openssh.enable = true;
@@ -308,14 +311,16 @@ in
   users.extraGroups.vboxusers.members = [ "sam" ];
 
   nix.settings.substituters = [
+    "https://cache.sitewisely.io"
     "https://cache.nixos.org"
-    "https://iohk.cachix.org"
+    # "https://iohk.cachix.org"
     "https://cache.iog.io"
     "https://nixcache.reflex-frp.org"
   ];
   nix.settings.trusted-public-keys = [
+    "cache.sitewisely.io:lszR3kpF1eDWYi8IxMrcu5a11T2HZ0x8yPgpVvqZm5M="
     "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
-    "iohk.cachix.org-1:DpRUyj7h7V830dp/i6Nti+NEO2/nhblbov/8MW7Rqoo="
+    # "iohk.cachix.org-1:DpRUyj7h7V830dp/i6Nti+NEO2/nhblbov/8MW7Rqoo="
     "hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ="
     "ryantrinkle.com-1:JJiAKaRv9mWgpVAz8dwewnZe0AzzEAzPkagE9SP5NWI="
   ];
@@ -380,8 +385,6 @@ in
       ];
     };
   };
-
-  networking.nameservers = [ "10.100.0.1" ];
 
   services.syncthing = {
     enable = true;
