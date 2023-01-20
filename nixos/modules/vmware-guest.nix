@@ -8,16 +8,16 @@
 with lib;
 
 let
-  cfg = config.virtualisation.vmware2.guest;
+  cfg = config.virtualisation.vmware.guest;
   open-vm-tools = if cfg.headless then pkgs.open-vm-tools-headless else pkgs.open-vm-tools;
   xf86inputvmmouse = pkgs.xorg.xf86inputvmmouse;
 in
 {
   imports = [
-    (mkRenamedOptionModule [ "services" "vmwareGuest2" ] [ "virtualisation" "vmware" "guest" ])
+    (mkRenamedOptionModule [ "services" "vmwareGuest" ] [ "virtualisation" "vmware" "guest" ])
   ];
 
-  options.virtualisation.vmware2.guest = {
+  options.virtualisation.vmware.guest = {
     enable = mkEnableOption "VMWare Guest Support";
     headless = mkOption {
       type = types.bool;
@@ -31,6 +31,10 @@ in
       assertion = pkgs.stdenv.isi686 || pkgs.stdenv.isx86_64 || pkgs.stdenv.isAarch64;
       message = "VMWare guest is not currently supported on ${pkgs.stdenv.hostPlatform.system}";
     } ];
+
+    # Disable the default module and import our override. We have
+    # customizations to make this work on aarch64.
+    disabledModules = [ "virtualisation/vmware-guest.nix" ];
 
     boot.initrd.availableKernelModules = [ "mptspi" ];
     # boot.initrd.kernelModules = [ "vmw_pvscsi" ];

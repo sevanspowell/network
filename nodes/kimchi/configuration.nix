@@ -13,6 +13,7 @@ in
     "${modulesPath}/installer/cd-dvd/channel.nix"
     ../../nixos/modules/direnv
     ../../nixos/modules/yubikey-gpg
+    ../../nixos/modules/vm-aarch64.nix
   ];
 
   nix.nixPath = [
@@ -59,7 +60,8 @@ in
   boot.loader.systemd-boot.configurationLimit = 3;
   boot.loader.efi.canTouchEfiVariables = true;
 
-  networking.hostName = "orchid"; # Define your hostname.
+  # Define your hostname.
+  networking.hostName = "kimchi";
 
   # Select internationalisation properties.
   console = {
