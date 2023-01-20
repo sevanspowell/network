@@ -58,7 +58,7 @@
       server = nixosSystem (import ./nodes/server inputs);
       mooncake = nixosSystem (import ./nodes/mooncake inputs);
       client = nixosSystem (import ./nodes/client inputs);
-      kimchi = nixosSystem (impot ./nodes/kimchi inputs);
+      kimchi = nixosSystem (import ./nodes/kimchi inputs);
       # install-eyd = nixosSystem (import ./images/install-eyd inputs);
     };
 
