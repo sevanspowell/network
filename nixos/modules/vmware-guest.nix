@@ -32,10 +32,6 @@ in
       message = "VMWare guest is not currently supported on ${pkgs.stdenv.hostPlatform.system}";
     } ];
 
-    # Disable the default module and import our override. We have
-    # customizations to make this work on aarch64.
-    disabledModules = [ "virtualisation/vmware-guest.nix" ];
-
     boot.initrd.availableKernelModules = [ "mptspi" ];
     # boot.initrd.kernelModules = [ "vmw_pvscsi" ];
 
