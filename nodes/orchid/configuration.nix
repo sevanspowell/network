@@ -316,8 +316,10 @@ in
     # "https://iohk.cachix.org"
     "https://cache.iog.io"
     "https://nixcache.reflex-frp.org"
+    "https://cache.zw3rk.com"
   ];
   nix.settings.trusted-public-keys = [
+    "loony-tools:pr9m4BkM/5/eSTZlkQyRt57Jz7OMBxNSUiMC4FkcNfk="
     "cache.sitewisely.io:lszR3kpF1eDWYi8IxMrcu5a11T2HZ0x8yPgpVvqZm5M="
     "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
     # "iohk.cachix.org-1:DpRUyj7h7V830dp/i6Nti+NEO2/nhblbov/8MW7Rqoo="
