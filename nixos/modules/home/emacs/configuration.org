@@ -927,6 +927,18 @@ Load nix-managed emacs packages:
 #+BEGIN_SRC emacs-lisp
   (use-package elm-mode
     :ensure t
+    :init
+    (add-hook 'elm-mode-hook 'lsp)
+    (general-define-key
+      :states '(normal motion)
+      :keymaps 'elm-mode-map
+      :prefix ","
+      "g"  '(:ignore t :which-key "goto")
+      "gd" '(lsp-find-definition :which-key "find definitions")
+      "gr" '(lsp-find-references :which-key "find references")
+      "ga" '(xref-find-apropos :which-key "find symbol in workspace")
+      "gb" 'xref-pop-marker-stack
+     )
   )
 #+END_SRC
 
@@ -1173,6 +1185,11 @@ By default epa-file tries to use password-based encryption. I always want to use
   (add-hook 'writeroom-mode 'visual-line-mode)
 #+END_SRC
 
+** YAML
+#+BEGIN_SRC emacs-lisp
+(use-package yaml-mode
+  :ensure t)
+#+END_SRC
 
 ** Rust
 
@@ -1213,6 +1230,27 @@ By default epa-file tries to use password-based encryption. I always want to use
     )
 #+END_SRC
 
+** Obsidian
+
+#+BEGIN_SRC emacs-lisp
+(use-package obsidian
+  :ensure t
+  :demand t
+  :config
+  (obsidian-specify-path "~/docs/obsidian")
+  (global-obsidian-mode t)
+  :custom
+  ;; This directory will be used for `obsidian-capture' if set.
+  (obsidian-inbox-directory "Inbox")
+  :bind (:map obsidian-mode-map
+  ;; Replace C-c C-o with Obsidian.el's implementation. It's ok to use another key binding.
+  ("C-c C-o" . obsidian-follow-link-at-point)
+  ;; Jump to backlinks
+  ("C-c C-b" . obsidian-backlink-jump)
+  ;; If you prefer you can use `obsidian-insert-link'
+  ("C-c C-l" . obsidian-insert-wikilink)))
+#+END_SRC
 ** Contact
 
 mail@sevanspowell.net
+
