@@ -278,7 +278,7 @@ in
   hardware.opengl.driSupport = true;
   hardware.opengl.driSupport32Bit = true;
   hardware.opengl.enable = true;
-  # hardware.opengl.extraPackages = [pkgs.mesa.drivers];
+  hardware.opengl.extraPackages = [pkgs.mesa.drivers];
   hardware.nvidia.package = ["nvidia"];
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
