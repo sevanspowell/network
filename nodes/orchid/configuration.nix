@@ -92,6 +92,8 @@ in
     cardano-node
     cabal-install
     chromium
+    vulkan-tools
+    vulkan-headers
     cabal2nix
     cntr
     # dhcpcd
@@ -263,7 +265,6 @@ in
     # layout = "us";
     # desktopManager.xterm.enable = false;
     xkbOptions="ctrl:nocaps";
-    videoDrivers = ["nvidia"];
 
     # displayManager.defaultSession = "none+xmonad";
     desktopManager.xterm.enable = true;
@@ -273,6 +274,13 @@ in
     #   enableContribAndExtras = true;
     # };
   };
+
+
+  hardware.opengl.driSupport = true;
+  hardware.opengl.driSupport32Bit = true;
+  hardware.opengl.enable = true;
+  # hardware.opengl.extraPackages = [pkgs.mesa.drivers];
+  hardware.nvidia.package = ["nvidia"];
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.extraUsers.sam = {
