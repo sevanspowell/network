@@ -93,7 +93,6 @@ in
     cabal-install
     chromium
     vulkan-tools
-    vulkan-headers
     cabal2nix
     cntr
     # dhcpcd
