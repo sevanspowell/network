@@ -107,6 +107,7 @@ in
     git
     nix-ll
     gnumake
+    glxinfo
     ledger
     libreoffice
     mitscheme
@@ -267,6 +268,7 @@ in
 
     # displayManager.defaultSession = "none+xmonad";
     desktopManager.xterm.enable = true;
+    videoDrivers = [ "nvidia" ];
 
     # windowManager.xmonad = {
     #   enable = true;
@@ -279,7 +281,10 @@ in
   hardware.opengl.driSupport32Bit = true;
   hardware.opengl.enable = true;
   hardware.opengl.extraPackages = [pkgs.mesa.drivers];
-  hardware.nvidia.package = ["nvidia"];
+  # Optionally, you may need to select the appropriate driver version for your specific GPU.
+  hardware.nvidia.package = config.boot.kernelPackages.nvidiaPackages.stable;
+  # nvidia-drm.modeset=1 is required for some wayland compositors, e.g. sway
+  # hardware.nvidia.modesetting.enable = true;
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.extraUsers.sam = {
