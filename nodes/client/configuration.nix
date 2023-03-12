@@ -13,9 +13,8 @@ in
 {
   imports = [
     "${modulesPath}/installer/cd-dvd/channel.nix"
-    # ../../nixos/modules/direnv
+    ../../nixos/modules/direnv
     ../../nixos/modules/yubikey-gpg
-    ../../nixos/modules/weechat
     ../../nixos/modules/vmware-guest.nix
   ];
 
@@ -35,7 +34,7 @@ in
 
   nixpkgs.overlays = [
     emacs-overlay
-    (import ../../nixos/modules/home/emacs/emacs.nix)
+    # (import ../../nixos/modules/home/emacs/emacs.nix)
   ];
 
   home-manager.users.dev = {...}: {
@@ -111,7 +110,7 @@ in
     vim
     wally-cli
     wget
-    wireguard
+    wireguard-tools
     xscreensaver
     zathura
   ]) ++
@@ -194,20 +193,20 @@ in
     "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJzHCI1ZW7gnF7l7d/qIiow4kViRwp0pvybZVjlBZBrW cardno:000610630425"
   ];
 
-  nix.binaryCaches = [
+  nix.settings.substituters = [
     "https://cache.nixos.org"
     "https://cache.iog.io"
   ];
-  nix.binaryCachePublicKeys = [
+  nix.settings.trusted-public-keys = [
     "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
     "hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ="
   ];
 
-  nix.buildCores = 2;
-  nix.maxJobs = 4;
+  nix.settings.cores = 2;
+  nix.settings.max-jobs = 4;
 
   nix = {
-    package = pkgs.nix_2_7;
+    # package = pkgs.nix_2_7;
     extraOptions = ''
       experimental-features = nix-command flakes
     '';

@@ -187,9 +187,9 @@ in
 
   hardware.keyboard.zsa.enable = true;
 
-  # services.postgresql = {
-  #   enable = true;
-  #   enableTCPIP = false;
+  services.postgresql = {
+    enable = true;
+    enableTCPIP = false;
   #   settings = {
   #     log_statement = "all";
   #     max_connections = 200;
@@ -215,15 +215,10 @@ in
   #     explorer-users sam cexplorer
   #     explorer-users cexplorer cexplorer
   #   '';
-  #   authentication = ''
-  #     local all all ident map=explorer-users
-  #     local all all trust
-  #   '';
-  #   ensureDatabases = [
-  #     "explorer_python_api"
-  #     "cexplorer"
-  #     "hdb_catalog"
-  #   ];
+    package = pkgs.postgresql.withPackages (p: [ p.postgis ]);
+    authentication = ''
+      host all all all trust
+    '';
   #   ensureUsers = [
   #     {
   #       name = "cardano-node";
@@ -243,14 +238,7 @@ in
   #       };
   #     }
   #   ];
-  #   initialScript = pkgs.writeText "init.sql" ''
-  #     CREATE USER sam WITH SUPERUSER;
-  #     CREATE USER cexplorer WITH SUPERUSER;
-  #     CREATE USER cardano-node WITH SUPERUSER;
-  #     CREATE USER root WITH SUPERUSER;
-  #     CREATE DATABASE sam WITH OWNER sam;
-  #   '';
-  # };
+  };
 
   virtualisation.docker.enable = true;
   virtualisation.docker.enableOnBoot = true;
