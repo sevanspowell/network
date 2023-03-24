@@ -35,6 +35,47 @@ in
   home-manager.useGlobalPkgs = true;
   home-manager.useUserPackages = true;
 
+  sops.defaultSopsFile = ../../secrets/orchid.yaml;
+  sops.age.sshKeyPaths = [ "/etc/ssh/ssh_host_ed25519_key" ];
+  sops.secrets = {
+    org_gcal_client_id = {
+      owner = config.users.users.sam.name;
+    };
+    org_gcal_client_secret = {
+      owner = config.users.users.sam.name;
+    };
+  };
+
+  services.syncthing = {
+    enable = true;
+    dataDir = "/home/sam";
+    openDefaultPorts = true;
+    configDir = "/home/sam/.config/syncthing";
+    user = "sam";
+    group = "users";
+    guiAddress = "0.0.0.0:8384";
+    declarative = {
+      overrideDevices = true;
+      overrideFolders = true;
+      devices = {
+        "orchid" = { id = "LYKIJPS-CUDQ2ZV-UKDZXBR-FTLCIAT-7KCJDLV-SGL67O7-UGYZOGX-VWMBFQQ"; };
+      };
+      folders = {
+        "org" = {
+          path = "/home/sam/org";
+          devices = [ "orchid" ];
+          versioning = {
+            type = "staggered";
+            params = {
+              cleanInterval = "3600";
+              maxAge = "15768000";
+            };
+          };
+        };
+      };
+    };
+  };
+
   nixpkgs.overlays = [
     emacs-overlay
   ];
@@ -108,6 +149,7 @@ in
     nix-ll
     gnumake
     glxinfo
+    renderdoc
     ledger
     libreoffice
     mitscheme
@@ -265,6 +307,7 @@ in
     # layout = "us";
     # desktopManager.xterm.enable = false;
     xkbOptions="ctrl:nocaps";
+    dpi = null
 
     # displayManager.defaultSession = "none+xmonad";
     desktopManager.xterm.enable = true;
@@ -360,9 +403,7 @@ in
   services.vnstat.enable = true;
 
   networking.firewall = {
-    allowedUDPPorts = [ 51820 ]  # Wireguard
-                   ++ [ 21027 ]; # syncthing
-    allowedTCPPorts = [ 22000 ]; # syncthing
+    allowedUDPPorts = [ 51820 ];  # Wireguard
   };
   networking.wireguard.interfaces = {
     wg0 = {
@@ -385,18 +426,6 @@ in
           endpoint = "159.196.88.245:51820";
         }
       ];
-    };
-  };
-
-  services.syncthing = {
-    enable = true;
-    overrideDevices = true;
-    devices = {
-      "server" = {
-        id = "5HGYKKS-QQ7STUR-3DPAKBX-UUASJWW-Y437X52-NIHQ2BT-B4SUJBA-PDGD4QH";
-        addresses = [ "tcp://server:22000" ];
-        introducer = true;
-      };
     };
   };
 }

@@ -1,21 +1,14 @@
-# This example uses YAML anchors which allows reuse of multiple keys 
+# This example uses YAML anchors which allows reuse of multiple keys
 # without having to repeat yourself.
 # Also see https://github.com/Mic92/dotfiles/blob/master/nixos/.sops.yaml
 # for a more complex example.
 keys:
-  - &admin_sam BF079FBB51A9D908FF4D2D716504B986D4D056D4
-  - &orchid age1m2q2v07hug53g7fccxrkxe87pewp60yk4chavy5pxes2e39qqdjqa35yta
-  - &server age1nhcw6aucnjhmhscq6e47jqfqmlpez57uxakuv4suwjl490w8uprsg4c804
+  - &admin_sam BF07 9FBB 51A9 D908 FF4D  2D71 6504 B986 D4D0 56D4
+  - &server_orchid age1m2q2v07hug53g7fccxrkxe87pewp60yk4chavy5pxes2e39qqdjqa35yta
 creation_rules:
-  - path_regex: nodes/orchid/secrets.yaml$
+  - path_regex: .*orchid.yaml$
     key_groups:
     - pgp:
-      - *admin_sam
+        - *admin_sam
       age:
-      - *orchid
-  - path_regex: nodes/server/secrets.yaml$
-    key_groups:
-    - pgp:
-      - *admin_sam
-      age:
-      - *server
+        - *server_orchid

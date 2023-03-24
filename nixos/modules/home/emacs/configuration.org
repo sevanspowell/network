@@ -622,11 +622,57 @@ Link to JIRA tickets:
 
   (when window-system (global-hl-line-mode t))
 
+  ;; (use-package nano-theme
+  ;;   :ensure t
+  ;; )
   (load-theme 'doom-nord t)
-  (enable-theme 'doom-nord)
+  (enable-theme 'doom-nord )
+  (use-package nano-modeline
+    :ensure t
+  )
 
   (set-frame-font "Source Code Pro-13" nil t)
   (setq-default line-spacing 0.3)
+#+END_SRC
+
+** Nano
+
+#+BEGIN_SRC emacs-lisp
+;; (defvar bootstrap-version)
+;; (let ((bootstrap-file
+;;        (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
+;;       (bootstrap-version 6))
+;;   (unless (file-exists-p bootstrap-file)
+;;     (with-current-buffer
+;;         (url-retrieve-synchronously
+;;          "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
+;;          'silent 'inhibit-cookies)
+;;       (goto-char (point-max))
+;;       (eval-print-last-sexp)))
+;;   (load bootstrap-file nil 'nomessage))
+
+;; (straight-use-package
+;;  '(nano-emacs :type git :host github :repo "rougier/nano-emacs"))
+
+;; (require 'nano)
+;; (setq nano-font-family-monospaced "Source Code Pro")
+
+;; (require 'nano-theme-dark)
+;; ;; (require 'nano-theme-light)
+
+;; (require 'nano-base-colors)
+;; (require 'nano-faces)
+;; (nano-faces)
+
+
+;; (require 'nano-modeline)
+;; (nano-modeline)
+
+;; (defface mu4e-attach-number-face '() "unknown")
+;; (require 'nano-theme)
+;; (nano-theme)
+
+;; (require 'nano-agenda)
 #+END_SRC
 
 ** Org mode
@@ -648,39 +694,45 @@ Activate org-mode src code highlighting:
   (setq org-src-fontify-natively t)
 #+END_SRC
 
+*** GTD
+
+#+BEGIN_SRC emacs-lisp
+  (defun org-capture-inbox ()
+     (interactive)
+     (call-interactively 'org-store-link)
+     (org-capture nil "i"))
+
+  (general-define-key
+    :prefix  ","
+    :states  'normal
+    "k"  '(:ignore t :which-key "capture")
+    "kk" 'org-capture
+    "ki" 'org-capture-inbox
+    "ka" 'org-agenda
+    )
+
+  (setq org-agenda-prefix-format
+      '((agenda . " %i %-12:c%?-12t% s")
+        (todo   . " ")
+        (tags   . " %i %-12:c")
+        (search . " %i %-12:c")))
+#+END_SRC
+
 Point org at agenda files:
 
 #+BEGIN_SRC emacs-lisp
-  (setq org-agenda-files '("~/Dropbox/org/in/inbox.org" "~/schedule.org"))
+  (setq org-directory "~/org")
+  (setq org-agenda-files (list "inbox.org" "calendar.org"))
 #+END_SRC
 
 
 Capture templates for: TODO tasks, Notes, appointments, phone calls,
 meetings, and org-protocol.
 #+BEGIN_SRC emacs-lisp
-  ;; (setq org-capture-templates
-  ;;   (quote (
-  ;;   ("n" "Note" entry (file+headline "~/Dropbox/org/in/inbox.org" "Notes")
-  ;;   "* %? \n%u\n" :empty-lines-before 1 :empty-lines-after 1)
-  ;;   ("b" "Bibliographic entry" entry (file+headline "~/Dropbox/org/in/inbox.org" "Bibliographic")
-  ;;   "* %? \n%u\n" :empty-lines-before 1 :empty-lines-after 1)
-  ;;   ))
-  ;;   )
-  ;; (setq org-global-properties (quote (("Effort_ALL" . "0:15 0:30 0:45 1:00 2:00 3:00 4:00 5:00 6:00 0:00")
-  ;;   ("STYLE_ALL" . "habit")))
-  ;;   )
-  (setq org-timesheet-file "~/org/timesheets/refile.org")
-
-  (setq-default org-capture-templates '(
-      ("t" "Task" entry (file+headline org-timesheet-file "Journal")
-       "* %?%^{Task}p%^{Effort}p\n  %i" :prepend t :clock-in t :clock-keep t :empty-lines 1)
-      ;; Capture a sub-task
-      ("s" "Sub-task" entry (clock)
-       "*  %?\n  %i" :prepend t :clock-in t :clock-keep t)
-      ;; Capture a thought: go to the current clocked heading, record notes there
-      ("n" "Note" item (clock)
-       " %i%?" :empty-lines-after 1)
-    )
+  (setq org-capture-templates
+      `(("i" "Inbox" entry  (file "inbox.org")
+        ,(concat "* TODO %?\n"
+                 "/Entered on/ %U")))
   )
 
   (setq org-enforce-todo-dependencies t)
@@ -689,6 +741,28 @@ meetings, and org-protocol.
     (quote ((sequence "NEXT(n)" "TODO(t)" "|" "DONE(d)")
     (sequence "WAITING(w@/!)" "HOLD(h@/!)" "|" "CANCELLED(c@/!)" "PHONE" "MEETING"))))
 #+END_SRC
+
+*** Calendar
+
+#+BEGIN_SRC emacs-lisp
+(defun get-file-contents (filename)
+  "Return the contents of FILENAME."
+  (with-temp-buffer
+    (insert-file-contents filename)
+    (buffer-string)))
+
+(use-package org-gcal
+  :ensure t
+  :init
+  (setq org-gcal-client-id (get-file-contents "/run/secrets/org_gcal_client_id")
+        org-gcal-client-secret (get-file-contents "/run/secrets/org_gcal_client_secret")
+        org-gcal-file-alist '(("mail@sevanspowell.net" .  "~/org/calendar.org")
+                              ("georgialeebennett@gmail.com" . "~/org/calendar.org")
+                              ))
+)
+#+END_SRC
+
+*** Other
 
 Clocking
 #+BEGIN_SRC emacs-lisp
@@ -718,14 +792,6 @@ Clocking
   (general-define-key
     :prefix  ","
     :states  'normal
-    "c"  '(:ignore t :which-key "capture")
-    "cc" 'org-capture
-    "ci" '((lambda () (interactive) (find-file "~/Dropbox/org/in/inbox.org")) :which-key "open-inbox")
-    )
-
-  (general-define-key
-    :prefix  ","
-    :states  'normal
     :keymaps 'org-mode-map
     "C"  '(:ignore t :which-key "clock")
     "Ci" 'org-clock-in
@@ -744,15 +810,6 @@ Clocking
     "tdr" 'org-table-delete-row
     "tdc" 'org-table-delete-column
     "p" 'org-tree-slide-mode
-    )
-   (general-define-key
-    :prefix ","
-    :states 'normal
-    :keymaps '(org-mode-map)
-    "c" '(lambda () (interactive) (
-      let ((current-prefix-arg))
-          (progn (call-interactively 'calc-dispatch)
-                 )))
     )
 #+END_SRC
 
@@ -1070,31 +1127,36 @@ vterm:
 
 ** Email
 #+BEGIN_SRC emacs-lisp
-  (require 'smtpmail)
-  (require 'mu4e)
-  (setq mu4e-contexts
-        `( ,(make-mu4e-context
-             :name "work"
-             :enter-func (lambda () (mu4e-message "Entering work context"))
-             :leave-func (lambda () (mu4e-message "Leaving work context"))
-             ;; :match-func (lambda (msg) t) 
-             :vars '( ( user-mail-address . "samuel.evans-powell@iohk.io" )
-                      ( user-full-name . "Samuel Evans-Powell" )
-                      ( mu4e-drafts-folder . "/[Gmail].Drafts" )
-                      ( mu4e-sent-folder . "/[Gmail].Sent Mail" )
-                      ( mu4e-trash-folder . "/[Gmail].Trash" )
-                      (setq mu4e-sent-messages-behavior 'delete)
-                      (setq message-send-mail-function 'smtpmail-send-it
-                            starttls-use-gnutls t
-                            smtpmail-starttls-credentials '(("smtp.gmail.com" 587 nil nil))
-                            smtpmail-auth-credentials '(("smtp.gmail.com" 587 "samuel.evans-powell@gmail.com" nil))
-                            smtpmail-default-smtp-server "smtp.gmail.com"
-                            smtpmail-smtp-server "smtp.gmail.com"
-                            smtpmail-smtp-service 587)))))
+  (use-package mu4e
+    :ensure nil
+    :config
+    (setq mu4e-mu-binary (executable-find "mu"))
+    )
+  ;; (require 'smtpmail)
+  ;; (require 'mu4e)
+  ;; (setq mu4e-contexts
+  ;;       `( ,(make-mu4e-context
+  ;;            :name "work"
+  ;;            :enter-func (lambda () (mu4e-message "Entering work context"))
+  ;;            :leave-func (lambda () (mu4e-message "Leaving work context"))
+  ;;            ;; :match-func (lambda (msg) t) 
+  ;;            :vars '( ( user-mail-address . "samuel.evans-powell@iohk.io" )
+  ;;                     ( user-full-name . "Samuel Evans-Powell" )
+  ;;                     ( mu4e-drafts-folder . "/[Gmail].Drafts" )
+  ;;                     ( mu4e-sent-folder . "/[Gmail].Sent Mail" )
+  ;;                     ( mu4e-trash-folder . "/[Gmail].Trash" )
+  ;;                     (setq mu4e-sent-messages-behavior 'delete)
+  ;;                     (setq message-send-mail-function 'smtpmail-send-it
+  ;;                           starttls-use-gnutls t
+  ;;                           smtpmail-starttls-credentials '(("smtp.gmail.com" 587 nil nil))
+  ;;                           smtpmail-auth-credentials '(("smtp.gmail.com" 587 "samuel.evans-powell@gmail.com" nil))
+  ;;                           smtpmail-default-smtp-server "smtp.gmail.com"
+  ;;                           smtpmail-smtp-server "smtp.gmail.com"
+  ;;                           smtpmail-smtp-service 587)))))
 
-  (setq mail-user-agent 'mu4e-user-agent)
-  (setq mu4e-get-mail-command "offlineimap")
-  (setq message-kill-buffer-on-exit t)
+  ;; (setq mail-user-agent 'mu4e-user-agent)
+  ;; (setq mu4e-get-mail-command "offlineimap")
+  ;; (setq message-kill-buffer-on-exit t)
 #+END_SRC
 
 ** Chat
