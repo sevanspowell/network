@@ -456,7 +456,7 @@ Bootstrap
     "fen" '((lambda () (interactive) (find-file (replace-regexp-in-string "\n\\'" "" (shell-command-to-string "nix-instantiate --find-file nixos-config nix-instantiate --find-file nixos-config 2> /dev/null")))) :which-key "open-nix-config")
     "nr" '((lambda () (interactive) (let ((default-directory "/sudo::")) (async-shell-command "nixos-rebuild switch --keep-failed" "*nixos-rebuild*"))) :which-key "reload-nix-config")
     "fo"  '(:ignore t :which-key "organization")
-    "foi" '((lambda () (interactive) (find-file "~/org/inbox.org")) :which-key "open-org-inbox")
+    "oi" '((lambda () (interactive) (find-file "~/org/inbox.org")) :which-key "open-org-inbox")
     "fot" '((lambda () (interactive) (find-file "~/org/timesheets/tiny.org")) :which-key "open-org-timesheet")
     "ff"  'counsel-find-file
     "fr"  'counsel-recentf
@@ -709,6 +709,7 @@ Activate org-mode src code highlighting:
     "kk" 'org-capture
     "ki" 'org-capture-inbox
     "ka" 'org-agenda
+    "a" 'org-archive-subtree
     )
 
   (setq org-agenda-prefix-format
@@ -716,6 +717,8 @@ Activate org-mode src code highlighting:
         (todo   . " ")
         (tags   . " %i %-12:c")
         (search . " %i %-12:c")))
+
+  (setq org-archive-location "~/org/archive.org::")
 #+END_SRC
 
 Point org at agenda files:
@@ -738,7 +741,7 @@ meetings, and org-protocol.
   (setq org-enforce-todo-dependencies t)
 
   (setq org-todo-keywords
-    (quote ((sequence "NEXT(n)" "TODO(t)" "|" "DONE(d)")
+    (quote ((sequence "NEXT(n)" "TODO(t)" "IN PROGRESS(p)" "|" "DONE(d)")
     (sequence "WAITING(w@/!)" "HOLD(h@/!)" "|" "CANCELLED(c@/!)" "PHONE" "MEETING"))))
 #+END_SRC
 
@@ -753,13 +756,18 @@ meetings, and org-protocol.
 
 (use-package org-gcal
   :ensure t
-  :init
+  :after org
+  :config
   (setq org-gcal-client-id (get-file-contents "/run/secrets/org_gcal_client_id")
         org-gcal-client-secret (get-file-contents "/run/secrets/org_gcal_client_secret")
         org-gcal-file-alist '(("mail@sevanspowell.net" .  "~/org/calendar.org")
                               ("georgialeebennett@gmail.com" . "~/org/calendar.org")
                               ))
-)
+  (defun my-org-gcal-sync ()
+    (ignore-errors (org-gcal-sync)))
+
+  (add-hook 'org-agenda-mode-hook 'my-org-gcal-sync)
+  (add-hook 'org-capture-after-finalize-hook 'my-org-gcal-sync))
 #+END_SRC
 
 *** Other

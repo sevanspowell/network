@@ -115,7 +115,7 @@ in
 
     environment.systemPackages = with pkgs; [
       gnupg
-      yubioath-flutter
+      yubioath-desktop
       yubikey-manager
       ccid
       importYubikey

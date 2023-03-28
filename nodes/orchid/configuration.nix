@@ -233,7 +233,12 @@ in
 
   services.postgresql = {
     enable = true;
-    enableTCPIP = false;
+    port = 5433;
+    enableTCPIP = true;
+    settings = {
+      archive_mode = "on";
+      archive_command = "test ! -f /var/lib/postgresql/14/archive/%f && cp %p /var/lib/postgresql/14/archive/%f";
+    };
   #   settings = {
   #     log_statement = "all";
   #     max_connections = 200;
@@ -307,7 +312,7 @@ in
     # layout = "us";
     # desktopManager.xterm.enable = false;
     xkbOptions="ctrl:nocaps";
-    dpi = null
+    dpi = null;
 
     # displayManager.defaultSession = "none+xmonad";
     desktopManager.xterm.enable = true;
