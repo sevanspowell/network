@@ -30,6 +30,7 @@
       nix-ll = pkgs.callPackage ./pkgs/nix-ll.nix {};
       install-eyd = pkgs.callPackage ./pkgs/install-eyd.nix {};
       install-eyd-iso = (nixpkgs.lib.nixosSystem (import ./images/install-eyd system inputs)).config.system.build.isoImage;
+      emacs = pkgs.callPackage ./nixos/modules/home/emacs/package.nix {};
     };
 
     devShell = pkgs.mkShell {

@@ -7,18 +7,8 @@ let
   #   sha256 = "0px81s2s3ga1bg71da0j9nf1afmccsgmq2xb9wq1vdf3n77011ca";
   # });
 
-  emacsLocal = pkgs.emacsWithPackagesFromUsePackage {
-    package = pkgs.emacs28;
-    config = ./configuration.org;
-    extraEmacsPackages = epkgs: [ epkgs.vterm epkgs.emacsql-sqlite pkgs.mu ];
-    alwaysEnsure = true;
-    alwaysTangle = true;
-    override = epkgs: epkgs // {
-      direnv = epkgs.melpaPackages.direnv.overrideAttrs(old: {
-        # patches = [ ./remote-direnv.patch ];
-      });
-    };
-  };
+  emacsLocal = pkgs.callPackage ./package.nix {};
+
 in
 
 {
