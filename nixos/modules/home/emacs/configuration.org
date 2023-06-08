@@ -632,6 +632,7 @@ Link to JIRA tickets:
   )
 
   (set-frame-font "Source Code Pro-13" nil t)
+  ;; (set-frame-font "JetBrains Mono-13" nil t)
   (setq-default line-spacing 0.3)
 #+END_SRC
 
@@ -936,6 +937,9 @@ Load nix-managed emacs packages:
     :commands lsp
     )
 
+  (use-package outline-magic
+    :ensure t
+  )
 
   (use-package haskell-mode
     :ensure t
@@ -952,6 +956,25 @@ Load nix-managed emacs packages:
     (add-hook 'haskell-mode-hook 'lsp)
     (add-hook 'haskell-mode-hook 'diff-hl-margin-mode)
     (add-hook 'haskell-mode-hook 'display-fill-column-indicator-mode)
+
+    (eval-after-load 'outline
+      '(progn
+        (require 'outline-magic)
+        (define-key outline-minor-mode-map (kbd "<C-tab>") 'outline-cycle)))
+
+    (defun haskell-outline-level ()
+      (let (buffer-invisibility-spec)
+        (save-excursion
+          (skip-chars-forward "    \n")
+          (current-column))))
+
+    (add-hook 'haskell-mode-hook (lambda ()
+                                   (outline-minor-mode)
+                                   (set (make-local-variable 'outline-regexp)
+                                        (rx (* anything) (or "do" "mdo" "where")
+                                            symbol-end))
+                                   (set (make-local-variable 'outline-level) #'haskell-outline-level)
+                                   ))
 
     ;; Load lsp-haskell when we activate haskell mode in a buffer
     ;; (add-hook 'haskell-mode-hook #'lsp-haskell-enable)
@@ -970,6 +993,8 @@ Load nix-managed emacs packages:
       "gd" '(lsp-find-definition :which-key "find definitions")
       "gr" '(lsp-find-references :which-key "find references")
       "ga" '(xref-find-apropos :which-key "find symbol in workspace")
+      "ge" '(flycheck-next-error :which-key "find next error")
+      "e" '(flycheck-list-errors :which-key "list errors")
       "gb" 'xref-pop-marker-stack
       "gc" '(haskell-cabal-visit-file :which-key "cabal file")
       "hr" '((lambda () (interactive) (progn (kill-process "*emacs-local-hoogle*"))) :which-key "hoogle reload")
@@ -993,7 +1018,7 @@ Load nix-managed emacs packages:
   (use-package elm-mode
     :ensure t
     :init
-    (add-hook 'elm-mode-hook 'lsp)
+    ;; (add-hook 'elm-mode-hook 'lsp)
     (general-define-key
       :states '(normal motion)
       :keymaps 'elm-mode-map

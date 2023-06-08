@@ -45,10 +45,16 @@
         pkgs.ssh-to-age
         pkgs.sops
         pkgs.vim
+        pkgs.awscli
+        pkgs.terraform
       ];
     };
   })
 ) // {
+
+  nixosModules = {
+    base = import ./nixos/modules/base.nix inputs;
+  };
 
   nixosConfigurations =
     let
@@ -60,6 +66,9 @@
       client = nixosSystem (import ./nodes/client inputs);
       kimchi = nixosSystem (import ./nodes/kimchi inputs);
       # install-eyd = nixosSystem (import ./images/install-eyd inputs);
+      base = nixosSystem { system = "x86_64-linux";
+                           modules = [ self.nixosModules.base ];
+                         };
     };
 
   deploy = {

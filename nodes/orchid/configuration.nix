@@ -193,6 +193,7 @@ in
     meslo-lg
     source-code-pro
     noto-fonts-emoji
+    jetbrains-mono
   ];
 
   environment.interactiveShellInit = ''
@@ -237,7 +238,8 @@ in
     enableTCPIP = true;
     settings = {
       archive_mode = "on";
-      archive_command = "test ! -f /var/lib/postgresql/14/archive/%f && cp %p /var/lib/postgresql/14/archive/%f";
+      archive_command = "mkdir -p /var/lib/postgresql/14/archive && test ! -f /var/lib/postgresql/14/archive/%f && cp %p /var/lib/postgresql/14/archive/%f";
+      restore_command = "cp /var/lib/postgresql/14/archive/%f \"%p\"";
     };
   #   settings = {
   #     log_statement = "all";
