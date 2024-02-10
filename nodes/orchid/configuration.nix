@@ -194,7 +194,7 @@ in
     xmobar
   ]) ++ [];
 
-  fonts.packages = with pkgs; [
+  fonts.fonts = with pkgs; [
     fira-code
     iosevka
     hack-font
