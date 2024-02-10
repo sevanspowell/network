@@ -2,8 +2,6 @@
   description = "Network";
 
   inputs = {
-    cardano-db-sync.url = "github:input-output-hk/cardano-db-sync?ref=refs/tags/12.0.0";
-    cardano-node.url = "github:input-output-hk/cardano-node?ref=refs/tags/1.35.2";
     deploy.url = "github:input-output-hk/deploy-rs";
     flake-utils.url = "github:numtide/flake-utils";
     home-manager.url = "github:nix-community/home-manager";

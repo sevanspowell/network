@@ -5,8 +5,8 @@
 { modulesPath, config, pkgs, lib, inputs, ... }:
 
 let
-  cardano-cli = inputs.cardano-node.packages.x86_64-linux.cardano-cli;
-  cardano-node = inputs.cardano-node.packages.x86_64-linux.cardano-node;
+  # cardano-cli = inputs.cardano-node.packages.x86_64-linux.cardano-cli;
+  # cardano-node = inputs.cardano-node.packages.x86_64-linux.cardano-node;
 
   linode-cli = inputs.self.packages.x86_64-linux.linode-cli;
 
@@ -23,6 +23,10 @@ in
     ../../nixos/modules/yubikey-gpg
     # ../../nixos/modules/weechat
   ];
+
+  hardware.sane.enable = true;
+
+  services.tailscale.enable = false;
 
   boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
 
@@ -109,7 +113,7 @@ in
 
   # Use the systemd-boot EFI boot loader.
   boot.loader.systemd-boot.enable = true;
-  boot.loader.systemd-boot.configurationLimit = 3;
+  boot.loader.systemd-boot.configurationLimit = 2;
   boot.loader.efi.canTouchEfiVariables = true;
 
   networking.hostName = "orchid"; # Define your hostname.
@@ -129,19 +133,24 @@ in
   # List packages installed in system profile. To search, run:
   # $ nix search wget
   environment.systemPackages = (with pkgs; [
-    cardano-cli
-    cardano-node
+    tailscale
+    # cardano-cli
+    # cardano-node
+    cowsay
+    lolcat
+    termdown
     cabal-install
     chromium
     vulkan-tools
     cabal2nix
     cntr
     # dhcpcd
-    teams
+    # teams
     docker
     docker-compose
     dmenu
     firefox
+    kdenlive
     feh
     ghc
     go-jira
@@ -185,7 +194,7 @@ in
     xmobar
   ]) ++ [];
 
-  fonts.fonts = with pkgs; [
+  fonts.packages = with pkgs; [
     fira-code
     iosevka
     hack-font
@@ -232,70 +241,72 @@ in
 
   hardware.keyboard.zsa.enable = true;
 
-  services.postgresql = {
-    enable = true;
-    port = 5433;
-    enableTCPIP = true;
-    settings = {
-      archive_mode = "on";
-      archive_command = "mkdir -p /var/lib/postgresql/14/archive && test ! -f /var/lib/postgresql/14/archive/%f && cp %p /var/lib/postgresql/14/archive/%f";
-      restore_command = "cp /var/lib/postgresql/14/archive/%f \"%p\"";
-    };
+  # services.postgresql = {
+  #   enable = true;
+  #   port = 5433;
+  #   enableTCPIP = true;
   #   settings = {
-  #     log_statement = "all";
-  #     max_connections = 200;
-  #     shared_buffers = "2GB";
-  #     effective_cache_size = "6GB";
-  #     maintenance_work_mem = "512MB";
-  #     checkpoint_completion_target = 0.7;
-  #     wal_buffers = "16MB";
-  #     default_statistics_target = 100;
-  #     random_page_cost = 1.1;
-  #     effective_io_concurrency = 200;
-  #     work_mem = "10485kB";
-  #     min_wal_size = "1GB";
-  #     max_wal_size = "2GB";
+  #     archive_mode = "on";
+  #     archive_command = "mkdir -p /var/lib/postgresql/14/archive && test ! -f /var/lib/postgresql/14/archive/%f && cp %p /var/lib/postgresql/14/archive/%f";
+  #     restore_command = "cp /var/lib/postgresql/14/archive/%f \"%p\"";
   #   };
-  #   identMap = ''
-  #     explorer-users root cardano-node
-  #     explorer-users postgres postgres
-  #     explorer-users sam cardano-node
-  #     explorer-users cardano-node cexplorer
-  #     explorer-users cardano-node cardano-node
-  #     explorer-users root cexplorer
-  #     explorer-users sam cexplorer
-  #     explorer-users cexplorer cexplorer
+  # #   settings = {
+  # #     log_statement = "all";
+  # #     max_connections = 200;
+  # #     shared_buffers = "2GB";
+  # #     effective_cache_size = "6GB";
+  # #     maintenance_work_mem = "512MB";
+  # #     checkpoint_completion_target = 0.7;
+  # #     wal_buffers = "16MB";
+  # #     default_statistics_target = 100;
+  # #     random_page_cost = 1.1;
+  # #     effective_io_concurrency = 200;
+  # #     work_mem = "10485kB";
+  # #     min_wal_size = "1GB";
+  # #     max_wal_size = "2GB";
+  # #   };
+  # #   identMap = ''
+  # #     explorer-users root cardano-node
+  # #     explorer-users postgres postgres
+  # #     explorer-users sam cardano-node
+  # #     explorer-users cardano-node cexplorer
+  # #     explorer-users cardano-node cardano-node
+  # #     explorer-users root cexplorer
+  # #     explorer-users sam cexplorer
+  # #     explorer-users cexplorer cexplorer
+  # #   '';
+  #   package = pkgs.postgresql.withPackages (p: [ p.postgis ]);
+  #   authentication = ''
+  #     host all all all trust
   #   '';
-    package = pkgs.postgresql.withPackages (p: [ p.postgis ]);
-    authentication = ''
-      host all all all trust
-    '';
-  #   ensureUsers = [
-  #     {
-  #       name = "cardano-node";
-  #       ensurePermissions = {
-  #         "DATABASE explorer_python_api" = "ALL PRIVILEGES";
-  #         "DATABASE cexplorer" = "ALL PRIVILEGES";
-  #         "DATABASE hdb_catalog" = "ALL PRIVILEGES";
-  #         "ALL TABLES IN SCHEMA public" = "ALL PRIVILEGES";
-  #       };
-  #     }
-  #     {
-  #       name = "cexplorer";
-  #       ensurePermissions = {
-  #         "DATABASE cexplorer" = "ALL PRIVILEGES";
-  #         "ALL TABLES IN SCHEMA information_schema" = "SELECT";
-  #         "ALL TABLES IN SCHEMA pg_catalog" = "SELECT";
-  #       };
-  #     }
-  #   ];
-  };
+  # #   ensureUsers = [
+  # #     {
+  # #       name = "cardano-node";
+  # #       ensurePermissions = {
+  # #         "DATABASE explorer_python_api" = "ALL PRIVILEGES";
+  # #         "DATABASE cexplorer" = "ALL PRIVILEGES";
+  # #         "DATABASE hdb_catalog" = "ALL PRIVILEGES";
+  # #         "ALL TABLES IN SCHEMA public" = "ALL PRIVILEGES";
+  # #       };
+  # #     }
+  # #     {
+  # #       name = "cexplorer";
+  # #       ensurePermissions = {
+  # #         "DATABASE cexplorer" = "ALL PRIVILEGES";
+  # #         "ALL TABLES IN SCHEMA information_schema" = "SELECT";
+  # #         "ALL TABLES IN SCHEMA pg_catalog" = "SELECT";
+  # #       };
+  # #     }
+  # #   ];
+  # };
 
   virtualisation.docker.enable = true;
   virtualisation.docker.enableOnBoot = true;
 
   virtualisation.libvirtd.enable = true;
+  boot.kernelModules = [ "kvm-amd" "kvm-intel" ];
   networking.firewall.checkReversePath = false;
+  boot.supportedFilesystems = [ "ntfs" ];
 
   # Enable CUPS to print documents.
   services.printing.enable = true;
@@ -339,7 +350,7 @@ in
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.extraUsers.sam = {
     createHome = true;
-    extraGroups = ["wheel" "video" "audio" "disk" "networkmanager" "docker" "libvirtd" "dialout" "plugdev" "wireshark" ];
+    extraGroups = ["wheel" "video" "audio" "disk" "networkmanager" "docker" "libvirtd" "dialout" "plugdev" "wireshark" "scanner" "lp"];
     group = "users";
     home = "/home/sam";
     isNormalUser = true;
@@ -357,7 +368,9 @@ in
   users.extraUsers.cexplorer.group = "cexplorer";
   users.groups.cexplorer = {};
 
-  # virtualisation.virtualbox.host.enable = true;
+  virtualisation.virtualbox.host.enable = true;
+  virtualisation.virtualbox.guest.enable = true;
+  virtualisation.virtualbox.guest.x11 = true;
   users.extraGroups.vboxusers.members = [ "sam" ];
 
   nix.settings.substituters = [
@@ -412,27 +425,29 @@ in
   networking.firewall = {
     allowedUDPPorts = [ 51820 ];  # Wireguard
   };
-  networking.wireguard.interfaces = {
-    wg0 = {
-      ips = [ "10.100.0.2/24" ];
-      listenPort = 51820;
+  # networking.wireguard.interfaces = {
+  #   wg0 = {
+  #     ips = [ "10.100.0.2/24" ];
+  #     listenPort = 51820;
 
-      generatePrivateKeyFile = true;
-      privateKeyFile = "/etc/wireguard/wg0";
+  #     generatePrivateKeyFile = true;
+  #     privateKeyFile = "/etc/wireguard/wg0";
 
-      peers = [
-        {
-          publicKey = "nUc1O2ASgcpDcov/T/LzSxleaH1TpW1vpdCofaSq9zw=";
-          allowedIPs = [ "10.100.0.1/32" ];
-          persistentKeepalive = 25;
-          endpoint = "194.195.122.100:51820";
-        }
-        {
-          publicKey = "qA6CoFU3os/v87e2PyYlAk6CpB/Rurk6v9F4/uOKc1U=";
-          allowedIPs = [ "10.100.0.3/32" ];
-          endpoint = "159.196.88.245:51820";
-        }
-      ];
-    };
-  };
+  #     peers = [
+  #       {
+  #         publicKey = "nUc1O2ASgcpDcov/T/LzSxleaH1TpW1vpdCofaSq9zw=";
+  #         allowedIPs = [ "10.100.0.1/32" ];
+  #         persistentKeepalive = 25;
+  #         endpoint = "194.195.122.100:51820";
+  #       }
+  #       {
+  #         publicKey = "qA6CoFU3os/v87e2PyYlAk6CpB/Rurk6v9F4/uOKc1U=";
+  #         allowedIPs = [ "10.100.0.3/32" ];
+  #         endpoint = "159.196.88.245:51820";
+  #       }
+  #     ];
+  #   };
+  # };
+
+  programs.steam.enable = true;
 }
