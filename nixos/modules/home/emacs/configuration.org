@@ -754,21 +754,6 @@ meetings, and org-protocol.
   (with-temp-buffer
     (insert-file-contents filename)
     (buffer-string)))
-
-(use-package org-gcal
-  :ensure t
-  :after org
-  :config
-  (setq org-gcal-client-id (get-file-contents "/run/secrets/org_gcal_client_id")
-        org-gcal-client-secret (get-file-contents "/run/secrets/org_gcal_client_secret")
-        org-gcal-file-alist '(("mail@sevanspowell.net" .  "~/org/calendar.org")
-                              ("georgialeebennett@gmail.com" . "~/org/calendar.org")
-                              ))
-  (defun my-org-gcal-sync ()
-    (ignore-errors (org-gcal-sync)))
-
-  (add-hook 'org-agenda-mode-hook 'my-org-gcal-sync)
-  (add-hook 'org-capture-after-finalize-hook 'my-org-gcal-sync))
 #+END_SRC
 
 *** Other
@@ -1141,11 +1126,11 @@ vterm:
 ** Modeline
 
 #+BEGIN_SRC emacs-lisp
-  (use-package mood-line
-    :ensure t
-    :config
-    (mood-line-mode)
-  )
+  ;; (use-package mood-line
+  ;;   :ensure t
+  ;;   :config
+  ;;   (mood-line-mode)
+  ;; )
 #+END_SRC
 
 ** Notifications
@@ -1160,11 +1145,11 @@ vterm:
 
 ** Email
 #+BEGIN_SRC emacs-lisp
-  (use-package mu4e
-    :ensure nil
-    :config
-    (setq mu4e-mu-binary (executable-find "mu"))
-    )
+  ;; (use-package mu4e
+  ;;   :ensure nil
+  ;;   :config
+  ;;   (setq mu4e-mu-binary (executable-find "mu"))
+  ;;   )
   ;; (require 'smtpmail)
   ;; (require 'mu4e)
   ;; (setq mu4e-contexts
@@ -1190,66 +1175,6 @@ vterm:
   ;; (setq mail-user-agent 'mu4e-user-agent)
   ;; (setq mu4e-get-mail-command "offlineimap")
   ;; (setq message-kill-buffer-on-exit t)
-#+END_SRC
-
-** Chat
-
-#+BEGIN_SRC emacs-lisp
-  ;; Install `plz' HTTP library (not on MELPA yet).
-  (use-package plz
-    :quelpa (plz :fetcher github :repo "alphapapa/plz.el"))
-  
-  ;; Install Ement.
-  (use-package ement
-    :quelpa (ement :fetcher github :repo "alphapapa/ement.el")
-    :config
-    (setf use-default-font-for-symbols nil)
-    (set-fontset-font t 'unicode "Noto Color Emoji" nil 'append)
-    (set-fontset-font t 'symbol "Noto Color Emoji" nil 'append)
-
-    (general-define-key
-      :states '(normal visual insert emacs)
-      :prefix ","
-      :keymaps 'ement-room-mode-map
-
-      "rr"  'ement-room-retro
-      "rs"  'ement-room-sync
-      "rc"  'ement-room-compose-message
-      "rm"  'ement-room-send-message
-      "rl"  'ement-room-list
-    )
-
-    (general-define-key
-      :states '(normal visual insert emacs)
-      :prefix "SPC"
-      :non-normal-prefix "C-SPC"
-
-      "ec"  '((lambda () (interactive) (adrestia-connect)) :which-key "adrestia-chat")
-      )
-
-    (defun ement-notify--event-not-session-user-p (event room session)
-      "Return non-nil if EVENT in ROOM mentions SESSION's user.
-    If EVENT's sender is SESSION's user, returns nil."
-      (pcase-let* (((cl-struct ement-session user) session)
-                   ((cl-struct ement-event sender) event))
-        (unless (equal (ement-user-id user) (ement-user-id sender))
-          (ement-notify--notifications-notify event room session))))
-
-    (setq ement-notify-functions '(ement-notify--notify-if-mention ement-notify--log-if-mention ement-notify--log-if-buffer ement-notify--event-not-session-user-p))
-
-    (defun adrestia-connect ()
-      (let* ((found (nth 0 (auth-source-search :host "localhost" :port "8008" :user "@sevanspowell:adrestia.iohkdev.io" :require '(:user :secret)))))
-        (if found
-            (let ((secret (plist-get found :secret))
-                  (user (plist-get found :user)))
-              (let ((secretpw (if (functionp secret) (funcall secret) secret)))
-                (ement-connect :uri-prefix "http://localhost:8008" :user-id user :password secretpw)))
-          nil
-          )))
-    :hook
-    (ement-room-mode . (lambda () (set-window-fringes (selected-window) 0 0 nil)))
-    (ement-room-mode . (lambda () (setq-local show-trailing-whitespace nil)))
-    )
 #+END_SRC
 
 ** Encryption

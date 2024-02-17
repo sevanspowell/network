@@ -104,7 +104,7 @@ in
     enable = true;
 
     users = {
-      sam.pinentryFlavor = "gtk2";
+      sam.pinentryFlavor = "qt";
       root.pinentryFlavor = "curses";
     };
   };
@@ -182,6 +182,7 @@ in
     vim
     wally-cli
     wireshark
+    arandr
     wget
     (wine.override { mingwSupport = true; wineBuild = "wine64"; })
     wireguard-tools

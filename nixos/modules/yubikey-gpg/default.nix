@@ -109,13 +109,13 @@ in
         enable = true;
         enableSSHSupport = true;
         enableExtraSocket = true;
-        pinentryFlavor = "gtk2";
+        pinentryFlavor = "qt";
       };
     };
 
     environment.systemPackages = with pkgs; [
       gnupg
-      yubioath-desktop
+      yubioath-flutter
       yubikey-manager
       ccid
       importYubikey
