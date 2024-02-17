@@ -1187,18 +1187,6 @@ By default epa-file tries to use password-based encryption. I always want to use
 (setq auth-sources '(password-store "~/.authinfo.gpg"))
 #+END_SRC
 
-** Calendar
-
-#+BEGIN_SRC emacs-lisp
-  (use-package org-gcal
-    :ensure t
-    :config
-    (setq org-gcal-client-id ""
-          org-gcal-client-secret ""
-          org-gcal-fetch-file-alist '(("samuel.evans-powell@iohk.io" .  "~/schedule.org")))
-    )
-#+END_SRC
-
 ** Writeroom
 
 #+BEGIN_SRC emacs-lisp
