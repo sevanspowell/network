@@ -50,36 +50,6 @@ in
     };
   };
 
-  services.syncthing = {
-    enable = true;
-    dataDir = "/home/sam";
-    openDefaultPorts = true;
-    configDir = "/home/sam/.config/syncthing";
-    user = "sam";
-    group = "users";
-    guiAddress = "0.0.0.0:8384";
-    declarative = {
-      overrideDevices = true;
-      overrideFolders = true;
-      devices = {
-        "orchid" = { id = "LYKIJPS-CUDQ2ZV-UKDZXBR-FTLCIAT-7KCJDLV-SGL67O7-UGYZOGX-VWMBFQQ"; };
-      };
-      folders = {
-        "org" = {
-          path = "/home/sam/org";
-          devices = [ "orchid" ];
-          versioning = {
-            type = "staggered";
-            params = {
-              cleanInterval = "3600";
-              maxAge = "15768000";
-            };
-          };
-        };
-      };
-    };
-  };
-
   nixpkgs.overlays = [
     emacs-overlay
   ];
