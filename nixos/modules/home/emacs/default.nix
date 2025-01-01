@@ -25,6 +25,7 @@ in
 
   fonts.fontconfig.enable = pkgs.lib.mkForce true;
 
+  services.emacs.enable = true;
   programs.emacs = {
     enable = true;
     package = emacsLocal;

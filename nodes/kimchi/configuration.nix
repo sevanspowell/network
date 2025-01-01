@@ -111,13 +111,11 @@ in
   boot.loader.systemd-boot.configurationLimit = 5;
 
   nix.settings.substituters = [
-    "https://cache.sitewisely.io"
     "https://cache.nixos.org"
     "https://cache.iog.io"
     "https://nixcache.reflex-frp.org"
   ];
   nix.settings.trusted-public-keys = [
-    "cache.sitewisely.io:lszR3kpF1eDWYi8IxMrcu5a11T2HZ0x8yPgpVvqZm5M="
     "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
     "hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ="
     "ryantrinkle.com-1:JJiAKaRv9mWgpVAz8dwewnZe0AzzEAzPkagE9SP5NWI="

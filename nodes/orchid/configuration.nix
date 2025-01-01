@@ -21,12 +21,18 @@ in
     # ../../nixos/modules/copy-network-repo.nix
     ../../nixos/modules/direnv
     ../../nixos/modules/yubikey-gpg
+    # ../../nixos/modules/gnome
     # ../../nixos/modules/weechat
   ];
 
   hardware.sane.enable = true;
 
-  services.tailscale.enable = false;
+  services.tailscale.enable = true;
+  services.tailscale.useRoutingFeatures = "client";
+  services.tailscale.extraUpFlags = [ "--ssh" ];
+
+  services.arbtt.enable = true;
+  services.arbtt.logFile = "/home/sam/.arbtt/capture.log";
 
   boot.binfmt.emulatedSystems = [ "aarch64-linux" ];
 
@@ -36,6 +42,7 @@ in
     "nixos-config=/srv/network/nodes/${config.networking.hostName}/default.nix"
   ];
 
+  nix.package = pkgs.nixVersions.nix_2_19;
   home-manager.useGlobalPkgs = true;
   home-manager.useUserPackages = true;
 
@@ -86,8 +93,6 @@ in
   boot.loader.systemd-boot.configurationLimit = 2;
   boot.loader.efi.canTouchEfiVariables = true;
 
-  networking.hostName = "orchid"; # Define your hostname.
-
   # Select internationalisation properties.
   console = {
     font = "Lat2-Terminus16";
@@ -121,10 +126,16 @@ in
     dmenu
     firefox
     kdenlive
+    kicad
     feh
     ghc
     go-jira
+
     git
+    git-annex
+    git-annex-remote-rclone
+
+    rclone
     nix-ll
     gnumake
     glxinfo
@@ -140,6 +151,7 @@ in
     pavucontrol
     patchutils
     pass
+    platformio
     ripgrep
     rofi
     rxvt_unicode-with-plugins
@@ -149,23 +161,27 @@ in
     tlaplusToolbox
     tree
     unzip
+    vulkan-validation-layers
     vim
+    nix-prefetch-git
     wally-cli
-    wireshark
     arandr
     wget
     (wine.override { mingwSupport = true; wineBuild = "wine64"; })
     wireguard-tools
     xscreensaver
+    android-tools
+    android-udev-rules
     zathura
   ]) ++
   (with pkgs.haskellPackages; [
     ghcid
     hasktags
     xmobar
+    arbtt
   ]) ++ [];
 
-  fonts.fonts = with pkgs; [
+  fonts.packages = with pkgs; [
     fira-code
     iosevka
     hack-font
@@ -214,13 +230,8 @@ in
 
   # services.postgresql = {
   #   enable = true;
-  #   port = 5433;
+  #   port = 5432;
   #   enableTCPIP = true;
-  #   settings = {
-  #     archive_mode = "on";
-  #     archive_command = "mkdir -p /var/lib/postgresql/14/archive && test ! -f /var/lib/postgresql/14/archive/%f && cp %p /var/lib/postgresql/14/archive/%f";
-  #     restore_command = "cp /var/lib/postgresql/14/archive/%f \"%p\"";
-  #   };
   # #   settings = {
   # #     log_statement = "all";
   # #     max_connections = 200;
@@ -276,17 +287,16 @@ in
 
   virtualisation.libvirtd.enable = true;
   boot.kernelModules = [ "kvm-amd" "kvm-intel" ];
-  networking.firewall.checkReversePath = false;
   boot.supportedFilesystems = [ "ntfs" ];
 
   # Enable CUPS to print documents.
   services.printing.enable = true;
   services.printing.drivers = [ pkgs.hplip pkgs.epson-escpr2 ];
   services.avahi.enable = true;
-  services.avahi.nssmdns = true;
+  services.avahi.nssmdns4 = true;
 
   # Enable sound.
-  sound.enable = true;
+  # sound.enable = true;
   hardware.pulseaudio.enable = true;
   hardware.pulseaudio.support32Bit = true;
 
@@ -295,7 +305,7 @@ in
     enable = true;
     # layout = "us";
     # desktopManager.xterm.enable = false;
-    xkbOptions="ctrl:nocaps";
+    xkb.options ="ctrl:nocaps";
     dpi = null;
 
     # displayManager.defaultSession = "none+xmonad";
@@ -306,10 +316,11 @@ in
     #   enable = true;
     #   enableContribAndExtras = true;
     # };
+
   };
 
 
-  hardware.opengl.driSupport = true;
+  # hardware.opengl.driSupport = true;
   hardware.opengl.driSupport32Bit = true;
   hardware.opengl.enable = true;
   hardware.opengl.extraPackages = [pkgs.mesa.drivers];
@@ -321,7 +332,7 @@ in
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.extraUsers.sam = {
     createHome = true;
-    extraGroups = ["wheel" "video" "audio" "disk" "networkmanager" "docker" "libvirtd" "dialout" "plugdev" "wireshark" "scanner" "lp"];
+    extraGroups = ["wheel" "video" "audio" "disk" "networkmanager" "docker" "libvirtd" "dialout" "plugdev" "wireshark" "scanner" "lp" "adbusers" "kvm"];
     group = "users";
     home = "/home/sam";
     isNormalUser = true;
@@ -331,6 +342,9 @@ in
     ];
   };
 
+  programs.adb.enable = true;
+  programs.wireshark.enable = true;
+
   users.users.root.openssh.authorizedKeys.keys = [
     "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJzHCI1ZW7gnF7l7d/qIiow4kViRwp0pvybZVjlBZBrW cardno:000610630425"
   ];
@@ -339,22 +353,22 @@ in
   users.extraUsers.cexplorer.group = "cexplorer";
   users.groups.cexplorer = {};
 
-  virtualisation.virtualbox.host.enable = true;
-  virtualisation.virtualbox.guest.enable = true;
-  virtualisation.virtualbox.guest.x11 = true;
-  users.extraGroups.vboxusers.members = [ "sam" ];
+  # virtualisation.virtualbox.host.enable = true;
+  # virtualisation.virtualbox.guest.enable = true;
+  # virtualisation.virtualbox.guest.x11 = true;
+  # users.extraGroups.vboxusers.members = [ "sam" ];
 
   nix.settings.substituters = [
-    "https://cache.sitewisely.io"
+    # "https://bucket.vpce-05447cd9b59749c2e-zm6zmqyb.s3.ap-southeast-2.vpce.amazonaws.com/cache.sambnt.io"
     "https://cache.nixos.org"
     # "https://iohk.cachix.org"
     "https://cache.iog.io"
     "https://nixcache.reflex-frp.org"
-    "https://cache.zw3rk.com"
+    # "https://cache.zw3rk.com"
   ];
   nix.settings.trusted-public-keys = [
-    "loony-tools:pr9m4BkM/5/eSTZlkQyRt57Jz7OMBxNSUiMC4FkcNfk="
-    "cache.sitewisely.io:lszR3kpF1eDWYi8IxMrcu5a11T2HZ0x8yPgpVvqZm5M="
+    "cache.sambnt.io:juiSxv2kOyXiXZuwx4RHuYmyUCdYmbAYAKdzBtkM7mo="
+    # "loony-tools:pr9m4BkM/5/eSTZlkQyRt57Jz7OMBxNSUiMC4FkcNfk="
     "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
     # "iohk.cachix.org-1:DpRUyj7h7V830dp/i6Nti+NEO2/nhblbov/8MW7Rqoo="
     "hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ="
@@ -396,6 +410,9 @@ in
   networking.firewall = {
     allowedUDPPorts = [ 51820 ];  # Wireguard
   };
+  networking.extraHosts = ''
+    127.0.0.1 www.example.com api.example.com login.example.com
+  '';
   # networking.wireguard.interfaces = {
   #   wg0 = {
   #     ips = [ "10.100.0.2/24" ];
@@ -421,4 +438,17 @@ in
   # };
 
   programs.steam.enable = true;
+
+  services.postgresql = {
+    enable = true;
+    ensureDatabases = [ "cpd" "mulch" ];
+    package = pkgs.postgresql_16;
+    authentication = pkgs.lib.mkOverride 10 ''
+      # Allow all local connections
+      local all all trust
+      # Allow all remote connections
+      host all all all trust
+    '';
+    enableTCPIP = true;
+  };
 }

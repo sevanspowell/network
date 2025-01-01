@@ -6,6 +6,8 @@
 	excludesfile = ~/.gitignore_global
 [github]
 	user = sevanspowell
+[gitlab]
+	user = sam900
 [commit]
 	gpgsign = true
 [alias]

@@ -532,10 +532,19 @@ Bootstrap
 
 Disable menu, scroll bar:
 #+BEGIN_SRC emacs-lisp
-  (tool-bar-mode 0)
-  (menu-bar-mode 0)
-  (scroll-bar-mode -1)
-  (fringe-mode '(0 . 0))
+  (defun my-configure-font (frame)
+    "Configure font given initial non-daemon FRAME.
+  Intended for `after-make-frame-functions'."
+    ;; Do stuff with FRAME...
+    (scroll-bar-mode -1)
+    (tool-bar-mode 0)
+    (menu-bar-mode 0)
+    (fringe-mode '(0 . 0))
+    (set-frame-font "Source Code Pro-13" nil t)
+    (remove-hook 'after-make-frame-functions #'my-configure-font))
+
+  (add-hook 'after-make-frame-functions #'my-configure-font)
+  ;; (add-hook 'window-setup-hook #'my-configure-font)
   (setq scroll-conservatively 100)
   (column-number-mode)
   (setq recentf-max-saved-items 1000)
@@ -626,13 +635,15 @@ Link to JIRA tickets:
   ;;   :ensure t
   ;; )
   (load-theme 'doom-nord t)
-  (enable-theme 'doom-nord )
+  (enable-theme 'doom-nord)
+
   (use-package nano-modeline
     :ensure t
   )
 
-  (set-frame-font "Source Code Pro-13" nil t)
   ;; (set-frame-font "JetBrains Mono-13" nil t)
+  (set-frame-font "Source Code Pro-13" nil t)
+  (setq default-frame-alist '((font . "Source Code Pro-13")))
   (setq-default line-spacing 0.3)
 #+END_SRC
 
@@ -676,6 +687,13 @@ Link to JIRA tickets:
 ;; (require 'nano-agenda)
 #+END_SRC
 
+** Mermaid
+#+BEGIN_SRC emacs-lisp
+  (use-package ob-mermaid
+    :ensure t
+  )
+#+END_SRC
+
 ** Org mode
 
 #+BEGIN_SRC emacs-lisp
@@ -686,6 +704,13 @@ Link to JIRA tickets:
     (setq org-src-preserve-indentation t)
     :hook
         (org-mode . visual-line-mode)
+    :custom
+      (org-confirm-babel-evaluate 'nil)
+      (org-babel-do-load-languages
+       'org-babel-load-languages
+       '((emacs-lisp . t)
+         (mermaid . t)
+         (shell . t)))
     )
 #+END_SRC
 
@@ -693,57 +718,6 @@ Activate org-mode src code highlighting:
 
 #+BEGIN_SRC emacs-lisp
   (setq org-src-fontify-natively t)
-#+END_SRC
-
-*** GTD
-
-#+BEGIN_SRC emacs-lisp
-  (defun org-capture-inbox ()
-     (interactive)
-     (call-interactively 'org-store-link)
-     (org-capture nil "i"))
-
-  (general-define-key
-    :prefix  ","
-    :states  'normal
-    "k"  '(:ignore t :which-key "capture")
-    "kk" 'org-capture
-    "ki" 'org-capture-inbox
-    "ka" 'org-agenda
-    "a" 'org-archive-subtree
-    )
-
-  (setq org-agenda-prefix-format
-      '((agenda . " %i %-12:c%?-12t% s")
-        (todo   . " ")
-        (tags   . " %i %-12:c")
-        (search . " %i %-12:c")))
-
-  (setq org-archive-location "~/org/archive.org::")
-#+END_SRC
-
-Point org at agenda files:
-
-#+BEGIN_SRC emacs-lisp
-  (setq org-directory "~/org")
-  (setq org-agenda-files (list "inbox.org" "calendar.org"))
-#+END_SRC
-
-
-Capture templates for: TODO tasks, Notes, appointments, phone calls,
-meetings, and org-protocol.
-#+BEGIN_SRC emacs-lisp
-  (setq org-capture-templates
-      `(("i" "Inbox" entry  (file "inbox.org")
-        ,(concat "* TODO %?\n"
-                 "/Entered on/ %U")))
-  )
-
-  (setq org-enforce-todo-dependencies t)
-
-  (setq org-todo-keywords
-    (quote ((sequence "NEXT(n)" "TODO(t)" "IN PROGRESS(p)" "|" "DONE(d)")
-    (sequence "WAITING(w@/!)" "HOLD(h@/!)" "|" "CANCELLED(c@/!)" "PHONE" "MEETING"))))
 #+END_SRC
 
 *** Calendar
@@ -794,6 +768,7 @@ Clocking
     "tT" 'org-clock-todays-total
     "tW" 'org-clock-thisweeks-total
     ";"  'org-columns
+    "di" 'org-display-inline-images
     "tE" 'org-toggle-pretty-entities
     "tn" 'org-table-create
     "tir" 'org-table-insert-row
@@ -804,8 +779,11 @@ Clocking
     "tdr" 'org-table-delete-row
     "tdc" 'org-table-delete-column
     "p" 'org-tree-slide-mode
+    "eh" 'org-pandoc-export-to-html5
     )
 #+END_SRC
+
+#+RESULTS:
 
 Exporting
 
@@ -826,13 +804,13 @@ Presentations
 Babel
 
 #+BEGIN_SRC emacs-lisp
-  (setq org-babel-load-languages '( (emacs-lisp . t)
-                                    (shell . t)
-                                  ))
-  (org-babel-do-load-languages
-   'org-babel-load-languages
-   '((emacs-lisp . nil)
-     (shell . t)))
+  ;; (setq org-babel-load-languages '( (emacs-lisp . t)
+  ;;                                   (shell . t)
+  ;;                                 ))
+  ;; (org-babel-do-load-languages
+  ;;  'org-babel-load-languages
+  ;;  '((emacs-lisp . t)
+  ;;    (shell . t)))
 #+END_SRC
 
 ** Nix
@@ -1257,7 +1235,42 @@ By default epa-file tries to use password-based encryption. I always want to use
   ("C-c C-b" . obsidian-backlink-jump)
   ;; If you prefer you can use `obsidian-insert-link'
   ("C-c C-l" . obsidian-insert-wikilink)))
+
+(use-package visual-fill-column
+  :ensure t
+)
 #+END_SRC
+
+** Invoice Export
+#+BEGIN_SRC emacs-lisp
+  (setq org-export-with-drawers t)
+#+END_SRC
+
+** Misc
+
+#+BEGIN_SRC emacs-lisp
+  (use-package cmake-mode
+    :ensure t
+    :mode ("\\CMakeLists.txt\\'" . cmake-mode)
+    )
+#+END_SRC
+
+** PHP
+
+#+BEGIN_SRC emacs-lisp
+  (use-package php-mode
+    :ensure t
+    :config
+    (add-hook 'php-mode-hook 'flymake-mode)
+    (add-hook 'php-mode-hook 'php-enable-symfony2-coding-style)
+    (add-hook 'php-mode-hook 'display-fill-column-indicator-mode)
+    )
+
+  (use-package web-mode
+    :ensure t
+    )
+#+END_SRC
+
 ** Contact
 
 mail@sevanspowell.net
