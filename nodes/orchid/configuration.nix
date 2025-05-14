@@ -90,7 +90,7 @@ in
 
   # Use the systemd-boot EFI boot loader.
   boot.loader.systemd-boot.enable = true;
-  boot.loader.systemd-boot.configurationLimit = 2;
+  boot.loader.systemd-boot.configurationLimit = 1;
   boot.loader.efi.canTouchEfiVariables = true;
 
   # Select internationalisation properties.
@@ -121,8 +121,8 @@ in
     cntr
     # dhcpcd
     # teams
-    docker
-    docker-compose
+    # docker
+    # docker-compose
     dmenu
     firefox
     kdenlive
@@ -154,7 +154,7 @@ in
     platformio
     ripgrep
     rofi
-    rxvt_unicode-with-plugins
+    rxvt-unicode
     silver-searcher
     spotify
     toxiproxy
@@ -173,6 +173,8 @@ in
     android-tools
     android-udev-rules
     zathura
+    # podman-tui # status of containers in the terminal
+    # podman-compose # start group of containers for dev
   ]) ++
   (with pkgs.haskellPackages; [
     ghcid
@@ -282,9 +284,6 @@ in
   # #   ];
   # };
 
-  virtualisation.docker.enable = true;
-  virtualisation.docker.enableOnBoot = true;
-
   virtualisation.libvirtd.enable = true;
   boot.kernelModules = [ "kvm-amd" "kvm-intel" ];
   boot.supportedFilesystems = [ "ntfs" ];
@@ -297,7 +296,7 @@ in
 
   # Enable sound.
   # sound.enable = true;
-  hardware.pulseaudio.enable = true;
+  hardware.pulseaudio.enable = false;
   hardware.pulseaudio.support32Bit = true;
 
   # Enable the X11 windowing system.
@@ -310,7 +309,7 @@ in
 
     # displayManager.defaultSession = "none+xmonad";
     desktopManager.xterm.enable = true;
-    videoDrivers = [ "nvidia" ];
+    videoDrivers = [ "modesetting" ];
 
     # windowManager.xmonad = {
     #   enable = true;
@@ -321,18 +320,21 @@ in
 
 
   # hardware.opengl.driSupport = true;
-  hardware.opengl.driSupport32Bit = true;
-  hardware.opengl.enable = true;
-  hardware.opengl.extraPackages = [pkgs.mesa.drivers];
+  hardware.graphics.enable = true;
+  hardware.graphics.enable32Bit = true;
+  hardware.graphics.extraPackages = [pkgs.mesa.drivers];
+  hardware.nvidia.open = false;
+  hardware.nvidia.modesetting.enable = true;
+  hardware.nvidia.nvidiaSettings = true;
+  nixpkgs.config.nvidia.acceptLicense = true;
   # Optionally, you may need to select the appropriate driver version for your specific GPU.
-  hardware.nvidia.package = config.boot.kernelPackages.nvidiaPackages.stable;
-  # nvidia-drm.modeset=1 is required for some wayland compositors, e.g. sway
-  # hardware.nvidia.modesetting.enable = true;
+  hardware.nvidia.package = config.boot.kernelPackages.nvidiaPackages.legacy470;
+  boot.kernelPackages = pkgs.linuxPackages_5_10;
 
   # Define a user account. Don't forget to set a password with ‘passwd’.
   users.extraUsers.sam = {
     createHome = true;
-    extraGroups = ["wheel" "video" "audio" "disk" "networkmanager" "docker" "libvirtd" "dialout" "plugdev" "wireshark" "scanner" "lp" "adbusers" "kvm"];
+    extraGroups = ["wheel" "video" "audio" "disk" "networkmanager" "docker" "libvirtd" "dialout" "plugdev" "wireshark" "scanner" "lp" "adbusers" "kvm" "podman"];
     group = "users";
     home = "/home/sam";
     isNormalUser = true;
@@ -439,16 +441,42 @@ in
 
   programs.steam.enable = true;
 
-  services.postgresql = {
-    enable = true;
-    ensureDatabases = [ "cpd" "mulch" ];
-    package = pkgs.postgresql_16;
-    authentication = pkgs.lib.mkOverride 10 ''
-      # Allow all local connections
-      local all all trust
-      # Allow all remote connections
-      host all all all trust
-    '';
-    enableTCPIP = true;
+  # services.postgresql = {
+  #   enable = true;
+  #   ensureDatabases = [ "cpd" "mulch" ];
+  #   package = pkgs.postgresql_16;
+  #   authentication = pkgs.lib.mkOverride 10 ''
+  #     # Allow all local connections
+  #     local all all trust
+  #     # Allow all remote connections
+  #     host all all all trust
+  #   '';
+  #   enableTCPIP = true;
+  # };
+
+  # Enable common container config files in /etc/containers
+
+  # virtualisation.docker.enable = true;
+  # virtualisation.docker.enableOnBoot = true;
+  boot.enableContainers = false;
+  virtualisation.containers.enable = true;
+  virtualisation = {
+    podman = {
+      enable = true;
+
+      # Create a `docker` alias for podman, to use it as a drop-in replacement
+      dockerCompat = true;
+
+      # Required for containers under podman-compose to be able to talk to each other.
+      defaultNetwork.settings.dns_enabled = true;
+    };
   };
+
+  # Useful other development tools
+  # environment.systemPackages = with pkgs; [
+  #   dive # look into docker image layers
+  #   podman-tui # status of containers in the terminal
+  #   docker-compose # start group of containers for dev
+  #   #podman-compose # start group of containers for dev
+  # ];
 }

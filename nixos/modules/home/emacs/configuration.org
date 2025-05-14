@@ -1045,11 +1045,25 @@ vterm:
 ** Ledger
 #+BEGIN_SRC emacs-lisp
   (use-package ledger-mode
-    :ensure t
-    :mode "\\.dat\\'"
+    :mode ("\\.dat\\'"
+           "\\.journal\\'")
+    :preface
+    (defun my/ledger-save ()
+      "Automatically clean the ledger buffer at each save."
+      (interactive)
+      (save-excursion
+        (when (buffer-modified-p)
+          (with-demoted-errors (ledger-mode-clean-buffer))
+          (save-buffer))))
     :config
     (setq ledger-default-date-format "%d/%m/%Y")
-  )
+    (general-define-key
+      :states '(normal motion)
+      :keymaps 'ledger-mode-map
+      :prefix "SPC"
+      "fs" 'my/ledger-save
+      )
+    )
   (use-package evil-ledger :ensure t)
 #+END_SRC
 
@@ -1194,48 +1208,11 @@ By default epa-file tries to use password-based encryption. I always want to use
     ;;   "C-c C-c"  'rust-run
     ;; )
     )
-  (use-package rustic
-    :ensure
-    :bind (:map rustic-mode-map
-                ("M-j" . lsp-ui-imenu)
-                ("M-?" . lsp-find-references)
-                ("C-c C-c l" . flycheck-list-errors)
-                ("C-c C-c a" . lsp-execute-code-action)
-                ("C-c C-c r" . lsp-rename)
-                ("C-c C-c q" . lsp-workspace-restart)
-                ("C-c C-c Q" . lsp-workspace-shutdown)
-                ("C-c C-c s" . lsp-rust-analyzer-status))
-    :config
-    ;; uncomment for less flashiness
-    ;; (setq lsp-eldoc-hook nil)
-    ;; (setq lsp-enable-symbol-highlighting nil)
-    ;; (setq lsp-signature-auto-activate nil)
-  
-    ;; comment to disable rustfmt on save
-    (setq rustic-format-on-save t)
-    )
 #+END_SRC
 
 ** Obsidian
 
 #+BEGIN_SRC emacs-lisp
-(use-package obsidian
-  :ensure t
-  :demand t
-  :config
-  (obsidian-specify-path "~/docs/obsidian")
-  (global-obsidian-mode t)
-  :custom
-  ;; This directory will be used for `obsidian-capture' if set.
-  (obsidian-inbox-directory "Inbox")
-  :bind (:map obsidian-mode-map
-  ;; Replace C-c C-o with Obsidian.el's implementation. It's ok to use another key binding.
-  ("C-c C-o" . obsidian-follow-link-at-point)
-  ;; Jump to backlinks
-  ("C-c C-b" . obsidian-backlink-jump)
-  ;; If you prefer you can use `obsidian-insert-link'
-  ("C-c C-l" . obsidian-insert-wikilink)))
-
 (use-package visual-fill-column
   :ensure t
 )
