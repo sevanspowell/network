@@ -1051,10 +1051,9 @@ vterm:
     (defun my/ledger-save ()
       "Automatically clean the ledger buffer at each save."
       (interactive)
-      (save-excursion
-        (when (buffer-modified-p)
-          (with-demoted-errors (ledger-mode-clean-buffer))
-          (save-buffer))))
+      (when (buffer-modified-p)
+        (with-demoted-errors (ledger-mode-clean-buffer))
+        (save-buffer)))
     :config
     (setq ledger-default-date-format "%d/%m/%Y")
     (general-define-key

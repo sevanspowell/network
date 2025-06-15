@@ -18,9 +18,10 @@ in
 {
   imports = [
     "${modulesPath}/installer/cd-dvd/channel.nix"
-    # ../../nixos/modules/copy-network-repo.nix
     ../../nixos/modules/direnv
     ../../nixos/modules/yubikey-gpg
+
+    # ../../nixos/modules/copy-network-repo.nix
     # ../../nixos/modules/gnome
     # ../../nixos/modules/weechat
   ];
@@ -42,7 +43,6 @@ in
     "nixos-config=/srv/network/nodes/${config.networking.hostName}/default.nix"
   ];
 
-  nix.package = pkgs.nixVersions.nix_2_19;
   home-manager.useGlobalPkgs = true;
   home-manager.useUserPackages = true;
 
@@ -125,8 +125,8 @@ in
     # docker-compose
     dmenu
     firefox
-    kdenlive
-    kicad
+    kdePackages.kdenlive
+    # kicad
     feh
     ghc
     go-jira
@@ -296,8 +296,8 @@ in
 
   # Enable sound.
   # sound.enable = true;
-  hardware.pulseaudio.enable = false;
-  hardware.pulseaudio.support32Bit = true;
+  services.pulseaudio.enable = false;
+  services.pulseaudio.support32Bit = true;
 
   # Enable the X11 windowing system.
   services.xserver = {
@@ -322,7 +322,7 @@ in
   # hardware.opengl.driSupport = true;
   hardware.graphics.enable = true;
   hardware.graphics.enable32Bit = true;
-  hardware.graphics.extraPackages = [pkgs.mesa.drivers];
+  hardware.graphics.extraPackages = [pkgs.mesa];
   hardware.nvidia.open = false;
   hardware.nvidia.modesetting.enable = true;
   hardware.nvidia.nvidiaSettings = true;

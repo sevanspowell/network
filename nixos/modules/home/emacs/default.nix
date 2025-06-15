@@ -12,11 +12,6 @@ let
 in
 
 {
-  nixpkgs.overlays = [
-    # emacsOverlay
-    # (import ./emacs.nix)
-  ];
-
   home.packages = [
     pkgs.sqlite
     pkgs.source-code-pro
